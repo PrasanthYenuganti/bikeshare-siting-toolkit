@@ -1,0 +1,15 @@
+# Raw downloads are large and can be re-fetched with src/fetch_data.py
+data/*/raw/
+# Never commit internal operator exports
+*admin*export*
+*BCycle*export*
+*.xlsx
+# Python and editor files
+__pycache__/
+*.pyc
+.venv/
+venv/
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
