@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coverage or Transit? Lessons from Milwaukee</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Public+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: a field report. Narrow reading column for argument, full-width bands for the map and evidence, transit-signage type for headings. */
+:root{
+  --paper:#f4f7f9; --panel:#ffffff; --ink:#15212c; --muted:#556675; --line:#d6e0e7;
+  --accent:#0a76b8; --accent-soft:#e3f0f8; --bus:#d9702a; --bike:#2c9466; --tram:#7a4fb0;
+  --c0:#eef4f8; --c1:#cde2ee; --c2:#9cc8df; --c3:#5fa6cc; --c4:#2a7db0; --c5:#0d4e7a;
+  --g0:#1f8a70; --g1:#86c29d; --g2:#f0cf73; --g3:#ec9446; --g4:#cf4458;
+  --lake:#d7e9f4; --nodata:#e4e8eb; --land:#eceff0;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Public Sans","Helvetica Neue",Arial,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0f1821; --panel:#16222d; --ink:#e4ecf2; --muted:#9db0bf; --line:#283a49;
+    --accent:#56b2ea; --accent-soft:#18324a; --bus:#f0954f; --bike:#4fc08b; --tram:#b08ae0;
+    --c0:#1a2834; --c1:#1c3b52; --c2:#215679; --c3:#2c74a5; --c4:#4f9ccf; --c5:#93c9ec;
+    --g0:#2aa385; --g1:#7fbf98; --g2:#d9b95e; --g3:#e08a43; --g4:#e06276;
+    --lake:#13324a; --nodata:#24313c; --land:#131d26; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0f1821; --panel:#16222d; --ink:#e4ecf2; --muted:#9db0bf; --line:#283a49;
+  --accent:#56b2ea; --accent-soft:#18324a; --bus:#f0954f; --bike:#4fc08b; --tram:#b08ae0;
+  --c0:#1a2834; --c1:#1c3b52; --c2:#215679; --c3:#2c74a5; --c4:#4f9ccf; --c5:#93c9ec;
+  --g0:#2aa385; --g1:#7fbf98; --g2:#d9b95e; --g3:#e08a43; --g4:#e06276;
+  --lake:#13324a; --nodata:#24313c; --land:#131d26; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font:16px/1.6 var(--body)}
+a{color:var(--accent)}
+a:focus-visible,button:focus-visible,input:focus-visible,label:focus-within{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+.read{max-width:68ch}
+header.top{padding:40px 0 28px;border-bottom:1px solid var(--line);background:var(--panel)}
+.eyebrow{font:600 13px/1.3 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;letter-spacing:.005em}
+h1{font-size:clamp(34px,5vw,54px);line-height:1.02;font-weight:700;max-width:22ch}
+h2{font-size:32px;line-height:1.1;font-weight:700;margin-bottom:10px}
+h3{font-size:22px;line-height:1.15;font-weight:600;margin-bottom:6px}
+.byline{color:var(--muted);font-size:14px;margin:14px 0 0}
+.lede{font-size:18px;margin:18px 0 0}
+section{padding:40px 0;border-bottom:1px solid var(--line)}
+.secnum{font:700 14px/1 var(--display);color:var(--muted);letter-spacing:.1em;display:block;margin-bottom:6px}
+p{margin:0 0 12px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:26px}
+.kpi{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--accent);padding:14px 16px;border-radius:4px}
+.kpi b{display:block;font:700 38px/1 var(--display);font-variant-numeric:tabular-nums}
+.kpi span{display:block;font-size:14px;margin-top:6px}
+.kpi small{display:block;color:var(--muted);font-size:12px;margin-top:4px}
+.principles{list-style:none;padding:0;margin:18px 0 0;display:grid;gap:12px;counter-reset:p}
+.principles li{counter-increment:p;display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:start;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:14px 16px}
+.principles li::before{content:counter(p);font:700 30px/1 var(--display);color:var(--accent)}
+.principles strong{display:block}
+/* map */
+.mapgrid{display:grid;grid-template-columns:260px 1fr;gap:16px;margin-top:18px}
+@media (max-width:820px){.mapgrid{grid-template-columns:1fr}}
+.controls{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:14px;display:flex;flex-direction:column;gap:14px;align-self:start}
+.controls fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.controls legend{font:600 12px/1.2 var(--body);text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:6px}
+.seg button{all:unset;cursor:pointer;display:block;padding:7px 10px;border:1px solid var(--line);border-radius:4px;font-size:14px;line-height:1.3;background:var(--paper)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+.seg button small{display:block;font-size:11.5px;opacity:.85}
+.chk{display:flex;gap:8px;align-items:center;font-size:14px;cursor:pointer}
+.chk input{accent-color:var(--accent);width:16px;height:16px}
+.sw{display:inline-block;width:18px;height:4px;border-radius:2px;vertical-align:middle}
+.mapbox{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+#map{display:block;width:100%;height:640px;touch-action:none;cursor:grab;background:var(--land)}
+#map:active{cursor:grabbing}
+.zoom{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:6px}
+.zoom button{all:unset;cursor:pointer;width:34px;height:34px;display:grid;place-items:center;background:var(--panel);border:1px solid var(--line);border-radius:4px;font:700 18px/1 var(--body);color:var(--ink)}
+.legend{position:absolute;left:10px;bottom:10px;background:color-mix(in srgb,var(--panel) 92%,transparent);border:1px solid var(--line);border-radius:4px;padding:7px 9px;font-size:11.5px;width:230px}
+.legend .row{display:flex;gap:3px;margin-top:4px}
+.legend .row i{flex:1;height:10px;border-radius:2px}
+.legend .ticks{display:flex;color:var(--muted);font-variant-numeric:tabular-nums;margin-top:2px;gap:3px;font-size:10.5px}.legend .ticks span{flex:1;text-align:center;line-height:1.2}
+.legend .st{margin-top:6px;display:flex;gap:4px 12px;flex-wrap:wrap;color:var(--muted)}.legend .st span{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+#tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--paper);font-size:12.5px;line-height:1.4;padding:7px 9px;border-radius:4px;max-width:240px;display:none;z-index:5}
+.mapnote{font-size:13px;color:var(--muted);margin-top:8px}
+/* charts */
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-top:18px}
+figure{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:16px}
+figcaption{font-size:13px;color:var(--muted);margin-top:8px}
+figure h3{font-size:20px}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart text{fill:var(--muted);font:12px var(--body);font-variant-numeric:tabular-nums}
+.chart .val{fill:var(--ink);font-weight:600}
+.chart .grid{stroke:var(--line);stroke-width:1}
+/* tables */
+.tbl{overflow-x:auto;margin-top:16px;background:var(--panel);border:1px solid var(--line);border-radius:4px}
+table{border-collapse:collapse;width:100%;font-size:14.5px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 12px/1.3 var(--body);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:var(--paper)}
+tr:last-child td{border-bottom:0}
+td.num{text-align:right;white-space:nowrap}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;font-weight:600}
+.pill.same{background:var(--accent-soft);color:var(--accent)}
+.pill.diff{background:color-mix(in srgb,var(--bus) 18%,transparent);color:var(--bus)}
+.wbar{display:inline-block;height:8px;background:var(--accent);border-radius:2px;vertical-align:middle;margin-right:8px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;align-items:start}
+@media (max-width:760px){.two{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:16px}
+.callout{background:var(--accent-soft);border-left:4px solid var(--accent);padding:14px 16px;border-radius:4px;margin-top:16px}
+.pt{background:var(--panel);border:1px dashed var(--line);padding:16px;border-radius:4px}
+.sources{font-size:14px;padding-left:20px}
+.sources li{margin-bottom:6px}
+footer{padding:28px 0 48px;color:var(--muted);font-size:13px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <p class="eyebrow">Practitioner input · OPTGIS · PET/COPPE/UFRJ study on bike-share expansion in Maricá</p>
+    <h1>Coverage or transit? What Milwaukee’s Bublr network suggests for Maricá</h1>
+    <p class="byline">Prasanth Yenuganti · Data analysis and business systems, Bublr Bikes (Milwaukee, Wisconsin, USA) · November 2026 · Public-data edition</p>
+    <div class="read">
+      <p class="lede">A transportation researcher studying bike-share expansion in Maricá, Brazil asked how a city should weigh gaps in station coverage against connections to public transport. My answer, drawn from Bublr’s experience of more than a decade running a docked system: treat them as two decisions at two scales. Coverage and station density decide which neighbourhoods get stations and how close together they are. Transit decides which corner the station stands on. The sections below show the evidence from our own data, the study’s six criteria mapped for Milwaukee, and the pairwise judgments I would give.</p>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><b>173</b><span>stations live today in Milwaukee, Wauwatosa, West Allis and Shorewood</span><small>BCycle public station feed, 17 Nov 2026</small></div>
+      <div class="kpi"><b>+32%</b><span>ridership growth January–July 2026 versus 2025 while Bublr 2.0 densified the network</span><small>NACTO, 2026</small></div>
+      <div class="kpi" style="border-left-color:var(--bus)"><b>86%</b><span>of stations within 200 m of a bus stop (59% within 100 m)</span><small>Station feed + OpenStreetMap bus stops</small></div>
+      <div class="kpi" style="border-left-color:var(--bike)"><b>27%</b><span>of residents in the four municipalities live within 500 m of a station (17% within 300 m)</span><small>Station feed + Census tracts, estimate</small></div>
+    </div>
+  </div>
+</header>
+
+<main>
+<section>
+  <div class="wrap">
+    <span class="secnum">01 · SHORT ANSWER</span>
+    <h2>Four rules we actually use</h2>
+    <ol class="principles read">
+      <li><div><strong>Coverage sets the grid.</strong>Bublr 2.0, our current expansion with the City of Milwaukee, aims for a station about every three blocks (≈300 m) in the core and every six blocks (≈600 m) in surrounding neighbourhoods. That grid comes first.</div></li>
+      <li><div><strong>Transit picks the corner.</strong>Inside each grid cell we put the station at a bus stop whenever the sidewalk allows. Bublr reports that about 80% of stations sit with a Milwaukee County Transit System (MCTS) stop, and new sites follow the same pattern.</div></li>
+      <li><div><strong>Never place a station alone.</strong>A docked bike is only useful if there is somewhere to return it. Our busiest stations sit in clusters. A station beside a strong bus line but far from other stations gets little use.</div></li>
+      <li><div><strong>Equity needs its own lever.</strong>We handle affordability with pricing (free income-qualified passes and a sponsored Eco Pass), so siting can focus on reaching neighbourhoods. In a fare-free system like Maricá’s, location is the main equity tool, so the equity criteria should carry real weight.</div></li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="secnum">02 · MAP</span>
+    <h2>Your criteria, drawn for Milwaukee</h2>
+    <p class="read">Each hexagon is 500 m across the flats, the same kind of grid the Maricá study uses with H3. Pick a layer to see how Milwaukee scores on it, then switch on our stations and networks. Hover a hexagon or a station for its values; drag to pan and use the buttons or your scroll wheel to zoom.</p>
+    <div class="mapgrid">
+      <div class="controls">
+        <fieldset class="seg" id="layerSeg">
+          <legend>Hexagon layer</legend>
+          <button type="button" data-layer="dens" aria-pressed="true">Population density<small>Coverage · residents per km²</small></button>
+          <button type="button" data-layer="inc" aria-pressed="false">Median household income<small>Equity · low income = darker</small></button>
+          <button type="button" data-layer="bus" aria-pressed="false">Bus stops within 400 m<small>Integration · stop count</small></button>
+          <button type="button" data-layer="bike" aria-pressed="false">Distance to bike facility<small>Integration · trails, protected and painted lanes</small></button>
+          <button type="button" data-layer="gap" aria-pressed="false">Distance to nearest Bublr station<small>Coverage gaps today</small></button>
+        </fieldset>
+        <fieldset>
+          <legend>Overlays</legend>
+          <label class="chk"><input type="checkbox" id="ovSt" checked> Bublr stations</label>
+          <label class="chk"><input type="checkbox" id="ovP" checked> <span class="sw" style="background:var(--bike)"></span> Trails and protected lanes</label>
+          <label class="chk"><input type="checkbox" id="ovL"> <span class="sw" style="background:var(--bike);opacity:.6"></span> Painted bike lanes</label>
+          <label class="chk"><input type="checkbox" id="ovT" checked> <span class="sw" style="background:var(--tram)"></span> The Hop streetcar</label>
+          <label class="chk"><input type="checkbox" id="ovR" checked> <span class="sw" style="background:var(--c3)"></span> Rivers</label>
+        </fieldset>
+      </div>
+      <div>
+        <div class="mapbox">
+          <svg id="map" role="img" aria-label="Map of Milwaukee, Wauwatosa, West Allis and Shorewood with hexagons coloured by the selected criterion and Bublr stations as circles"></svg>
+          <div class="zoom"><button type="button" id="zin" aria-label="Zoom in">+</button><button type="button" id="zout" aria-label="Zoom out">−</button><button type="button" id="zreset" aria-label="Reset view" style="font-size:12px">⟲</button></div>
+          <div class="legend" id="legend"></div>
+          <div id="tip"></div>
+        </div>
+        <p class="mapnote">Hexagon values come from the census tract containing each hexagon’s centre (ACS 5-year estimates). Bus stops and bike facilities come from OpenStreetMap; this map counts stops, not scheduled departures as the Maricá study does. Station circles show Bublr stations from the public station feed.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="secnum">03 · EVIDENCE</span>
+    <h2>Transit picks the corner</h2>
+    <p class="read">Bublr’s current expansion places stations about every three blocks in the core and every six blocks in neighbourhoods, and puts them at bus stops wherever the sidewalk allows. The public station feed and OpenStreetMap bus stops show how far that has gone.</p>
+    <div class="charts" style="grid-template-columns:minmax(0,560px)">
+      <figure class="chart"><h3>Most stations already sit at a bus stop</h3><div id="chB"></div><figcaption>Share of the 173 stations within each walking distance of the nearest bus stop (straight-line, OpenStreetMap).</figcaption></figure>
+    </div>
+    <div class="callout read"><b>What this means for siting weights.</b> Coverage and transit point to the same places most of the time (ρ = 0.53 between density and bus stops in Milwaukee; 0.62 in the Maricá study’s cells). Where they disagree, we have found it better to fill a dense neighbourhood with a cluster of stations than to stretch single stations along a bus corridor.</div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="secnum">04 · EQUITY</span>
+    <h2>Who lives near a station today</h2>
+    <p class="read">I split the roughly 690,000 residents of our four municipalities into five equal groups by the median household income of their census tract, then estimated how many live within 300 m and 500 m of a station. Coverage is U-shaped: the lowest-income fifth is better served than the middle, and the highest-income fifth is best served, mostly because of the dense, student-heavy East Side.</p>
+    <div class="two" style="grid-template-columns:minmax(0,560px)">
+      <figure class="chart"><h3>Residents within walking distance of a station</h3><div id="chQ"></div><figcaption>Share of residents in each income fifth living within 300 m (light) and 500 m (dark) of a station. Income ranges are tract medians.</figcaption></figure>
+    </div>
+    <p class="read" style="margin-top:16px">Today about 389,000 residents live in dense hexagons (1,500+ per km²) more than 500 m from a station. About 221,000 of them already have six or more bus stops within 400 m, and about 166,000 are in the two lowest income fifths. That overlap is where coverage, transit and equity all point the same way, and it is where we would look first.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="secnum">05 · CRITERIA COMPARED</span>
+    <h2>How the criteria move together: Milwaukee and Maricá</h2>
+    <p class="read">I repeated part of the study’s Spearman table on Milwaukee’s hexagons (998 cells of 350 m, populated cells only) with the same orientation: higher always means higher priority. The big difference is income. In Maricá lower-income areas have fewer buses and bike lanes; in Milwaukee the older, lower-income neighbourhoods have the denser bus grid.</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Criterion pair</th><th class="num" style="text-transform:none">Maricá ρ</th><th class="num" style="text-transform:none">Milwaukee ρ</th><th>Reading</th></tr></thead>
+        <tbody>
+          <tr><td>Population density · Bus proximity</td><td class="num">0.616</td><td class="num">0.528</td><td><span class="pill same">Similar</span> Dense places get buses in both cities.</td></tr>
+          <tr><td>Population density · Cycling infrastructure</td><td class="num">0.352</td><td class="num">0.314</td><td><span class="pill same">Similar</span></td></tr>
+          <tr><td>Bus proximity · Cycling infrastructure</td><td class="num">0.438</td><td class="num">0.385</td><td><span class="pill same">Similar</span></td></tr>
+          <tr><td>Income disadvantage · Bus proximity</td><td class="num">−0.298</td><td class="num">0.262</td><td><span class="pill diff">Opposite</span> Milwaukee’s poorer core has more stops.</td></tr>
+          <tr><td>Income disadvantage · Cycling infrastructure</td><td class="num">−0.348</td><td class="num">0.069</td><td><span class="pill diff">Different</span> Neutral in Milwaukee, negative in Maricá.</td></tr>
+          <tr><td>Income disadvantage · Population density</td><td class="num">−0.091</td><td class="num">0.152</td><td><span class="pill diff">Different</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="read" style="margin-top:14px">Because income is negatively correlated with every other criterion in the Maricá study, its weight is effectively the only thing pulling stations toward lower-income areas of Maricá. A sensitivity test on that one weight would show how much the final ranking depends on it.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="secnum">06 · MY ASSESSMENT</span>
+    <h2>Pairwise judgments for the Essential version</h2>
+    <p class="read">On the 1–9 scale, these are the judgments I would give for the study’s six criteria. They are mutually consistent (consistency ratio 0.00), so any nine of the fifteen pairs shown will agree with each other. The result gives each of the three objectives one-third of the weight, with one criterion inside each objective counting twice as much as the other.</p>
+    <div class="two">
+      <div class="tbl" style="margin-top:0">
+        <table>
+          <thead><tr><th>Criterion</th><th>Objective</th><th>Weight</th></tr></thead>
+          <tbody id="wtbl"></tbody>
+        </table>
+      </div>
+      <div class="tbl" style="margin-top:0">
+        <table>
+          <thead><tr><th>Pair</th><th>Judgment</th></tr></thead>
+          <tbody id="ptbl"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="callout read">If equity should matter more in Maricá, change one judgment: set <i>Low income vs Access to services</i> to Equal. Because Maricá’s system is fare-free, there is a good case for it.</div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="secnum">07 · SIDE BY SIDE</span>
+    <h2>Two systems, two price models</h2>
+    <div class="tbl">
+      <table>
+        <thead><tr><th></th><th>Bublr Bikes, Milwaukee</th><th>Vermelhinhas, Maricá</th></tr></thead>
+        <tbody>
+          <tr><td>Operator</td><td>Nonprofit, on the BCycle platform</td><td>EPT, municipal public company</td></tr>
+          <tr><td>Bike share since</td><td>2014</td><td>March 2021</td></tr>
+          <tr><td>Bus service</td><td>MCTS, paid fare; CONNECT 1 bus rapid transit since 2023</td><td>Tarifa Zero, fare-free since 2014</td></tr>
+          <tr><td>Price to ride a bike</td><td>Paid passes; free Access Pass for income-qualified residents</td><td>Free</td></tr>
+          <tr><td>Stations</td><td>173 (Nov 2026), docked, many on movable battery docks</td><td>About 60 adult + 10 children’s (2026 press reports vary), aiming for 70 + 10</td></tr>
+          <tr><td>Link to transit</td><td>~80% of stations at MCTS stops; 16% within 400 m of a streetcar stop</td><td>Integrated with Tarifa Zero bus lines</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="read" style="margin-top:14px">Maricá recorded 202,963 trips in 2023 from just 25 free stations, a reminder that price is a strong lever. In a free system, the location criteria carry the whole equity job.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap read">
+    <span class="secnum">08 · LESSONS</span>
+    <h2>What I would pass on to Maricá</h2>
+    <ul>
+      <li><b>Expand in clusters.</b> Add stations three or four at a time inside one neighbourhood so riders have nearby places to return bikes, rather than one station per district.</li>
+      <li><b>Use your own trip data before Strava.</b> Operators plan best with their own station-level trip records. App trip data are a complete record of bike-share use; Strava over-represents sport cyclists.</li>
+      <li><b>Prefer equipment you can move.</b> Our newer battery-powered docks can be rearranged. We downsized 58 low-use stations and reused the docks, which lets a first placement be corrected cheaply.</li>
+      <li><b>Count delivered bike lanes higher than planned ones.</b> Milwaukee reached its goal of 50 miles of protected bike lanes built or in development, but stations perform once lanes exist, not when they are drawn.</li>
+      <li><b>Hills and e-bikes.</b> Milwaukee is mostly flat, so slope rarely decides a site for us. Where Maricá’s terrain is steep, e-bikes change the slope penalty a lot.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="wrap read">
+    <span class="secnum">09 · METHODS AND SOURCES</span>
+    <h2>How these numbers were made</h2>
+    <p>Stations: BCycle public GBFS feed for Bublr, read 17 November 2026. Bus stops (3,751), streetcar stops, bike facilities and rivers: OpenStreetMap via the Overpass API, 17 November 2026. Tracts, municipal boundaries and Lake Michigan: US Census TIGERweb (ACS 2023 vintage). Income (B19049, median household income) and population (B01001): latest ACS 5-year estimates via the Esri Living Atlas. Distances are straight-line. Hexagon population is tract density × hexagon area, so totals are estimates.</p>
+    <p>This edition uses public data only. How it was made: I designed the analysis, checked the results and wrote the conclusions; I used Claude (Anthropic) as an assistant for code, open-data retrieval and first drafts.</p>
+    <ol class="sources">
+      <li><a href="https://nacto.org/latest/densifying-docked-bike-share-in-milwaukee/">NACTO: Densifying docked bike share in Milwaukee</a></li>
+      <li><a href="https://bublrbikes.org/news/2025/05/13/introducing-bublr2-0">Bublr Bikes: Introducing Bublr 2.0</a></li>
+      <li><a href="https://urbanmilwaukee.com/pressrelease/bublr-bikes-announces-new-veolia-eco-pass-program-to-expand-affordable-sustainable-transportation-across-milwaukee/">Bublr Bikes: Veolia Eco Pass program (May 2026)</a></li>
+      <li><a href="https://city.milwaukee.gov/dpw/Infrastructure/Programs/Bikeways">City of Milwaukee DPW: Bikeways program</a></li>
+      <li><a href="https://cbs58.com/news/wisconsin-bike-week-mayor-johnson-celebrates-development-of-protected-bike-lanes-in-milwaukee">CBS 58: Milwaukee reaches 50 miles of protected bike lanes built or in development</a></li>
+      <li><a href="https://www.brasildefato.com.br/2026/03/26/vermelhinhas-de-marica-sistema-gratuito-de-bicicletas-vence-premio-nacional-de-mobilidade/">Brasil de Fato: Vermelhinhas de Maricá (March 2026)</a></li>
+      <li><a href="https://rosalux.org.br/wp-content/uploads/2024/05/ULTIMO-BLOCO-presidente-da-EPT-Celso-Haddad.pdf">EPT Maricá presentation: Tarifa Zero and Vermelhinhas (2023 figures)</a></li>
+      <li><a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors (ODbL)</a> · <a href="https://tigerweb.geo.census.gov/">US Census TIGERweb</a> · <a href="https://gbfs.bcycle.com/bcycle_bublr/gbfs.json">Bublr GBFS feed</a></li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <div class="wrap read">
+    <span class="secnum">10 · RESUMO EM PORTUGUÊS</span>
+    <h2>Resumo</h2>
+    <div class="pt">
+      <p>Em Milwaukee tratamos cobertura e integração com o transporte público como duas decisões em escalas diferentes. A cobertura e a densidade definem quais bairros recebem estações e o espaçamento entre elas (cerca de 300 m no centro e 600 m nos bairros). A integração define a esquina: colocamos a estação no ponto de ônibus sempre que possível, e 86% das nossas 173 estações estão a até 200 m de um ponto.</p>
+      <p>Recomendamos expandir em grupos de estações, nunca isoladas. Como o sistema de Maricá é gratuito, a localização é a principal ferramenta de equidade, e o critério de renda merece um teste de sensibilidade.</p>
+    </div>
+  </div>
+</section>
+</main>
+<footer><div class="wrap">Prepared by Prasanth Yenuganti, Bublr Bikes, Milwaukee. Map data © OpenStreetMap contributors; boundaries and demographics from the US Census Bureau. Public-data edition. Source code: <a href="https://github.com/PrasanthYenuganti/bikeshare-siting-toolkit">github.com/PrasanthYenuganti/bikeshare-siting-toolkit</a></div></footer>
+
+<script>
+const D={"stations":[["Discovery World",434,-34,0,2,248,"Milwaukee"],["Red Arrow Park",326,28,0,2,94,"Milwaukee"],["Schlitz Park",310,103,0,2,8,"Milwaukee"],["Intermodal Station",264,-60,0,2,33,"Milwaukee"],["Broadway + St Paul",347,-53,0,2,109,"Milwaukee"],["777 East Wisconsin",385,-13,0,2,30,"Milwaukee"],["Brady + Humboldt",426,145,0,2,25,"Milwaukee"],["2nd + Washington",305,-222,0,2,157,"Milwaukee"],["Trestle Park",373,-125,0,2,556,"Milwaukee"],["Lakefront Brewery",366,171,0,2,48,"Milwaukee"],["Ogden + Jackson",366,92,0,2,111,"Milwaukee"],["Ogden + Marshall",400,91,0,2,102,"Milwaukee"],["Central Library",228,-15,0,2,68,"Milwaukee"],["Humboldt + Commerce",424,204,0,2,75,"Milwaukee"],["Erie + Menomonee",340,-95,0,2,139,"Milwaukee"],["UWM Student Union",547,388,0,2,28,"Milwaukee"],["Brady + Prospect",480,139,0,2,31,"Milwaukee"],["Marquette University Student Union",146,1,0,2,61,"Milwaukee"],["Water + Pleasant",356,126,0,2,34,"Milwaukee"],["Downer + Park Place",588,303,0,2,18,"Milwaukee"],["MLK + Brown",289,184,0,2,143,"Milwaukee"],["6th + Reservoir",255,164,0,2,41,"Milwaukee"],["16th + Washington",140,-220,0,2,96,"Milwaukee"],["Hoyt Park",-622,172,0,2,147,"Wauwatosa"],["North + Swan",-629,223,0,2,26,"Wauwatosa"],["North + 83rd",-539,227,0,2,32,"Wauwatosa"],["North + 72nd",-422,231,0,2,4,"Wauwatosa"],["North + 69th",-395,229,0,2,74,"Wauwatosa"],["Village South",-476,96,0,2,190,"Wauwatosa"],["Ludington Triangle",-539,140,0,2,652,"Wauwatosa"],["Pleasant + Commerce",331,140,0,2,300,"Milwaukee"],["Astor + Juneau",408,63,0,2,15,"Milwaukee"],["Burns Commons",442,87,0,2,34,"Milwaukee"],["North + Lake",565,224,0,2,21,"Milwaukee"],["5th + National",272,-188,0,2,124,"Milwaukee"],["Bradford Beach",591,200,0,2,288,"Milwaukee"],["Aurora",186,18,0,2,11,"Milwaukee"],["Zeidler Union Square Park",278,-30,0,2,23,"Milwaukee"],["War Memorial",429,9,0,2,184,"Milwaukee"],["Estabrook Park",349,668,0,2,232,"Shorewood"],["Vel R. Phillips + Garfield",278,213,0,2,160,"Milwaukee"],["South Shore Park",570,-518,0,2,534,"Milwaukee"],["Crescent Apartments",-760,41,0,2,195,"Wauwatosa"],["Washington at Summit Place",-394,-210,0,2,120,"West Allis"],["City Hall (West Allis)",-454,-267,0,2,93,"West Allis"],["Six Points Crossing + Greenfield",-362,-260,0,2,92,"West Allis"],["70th + Greenfield",-406,-258,0,2,22,"West Allis"],["75th + National",-456,-312,0,2,68,"West Allis"],["63rd + Greenfield",-331,-257,0,2,55,"West Allis"],["70th + National",-401,-296,0,2,61,"West Allis"],["Farmers Market",-360,-282,0,2,44,"West Allis"],["North + 64th",-343,229,0,2,18,"Wauwatosa"],["Wauwatosa + Hillcrest",-467,168,0,2,4,"Wauwatosa"],["Harwood + Milwaukee",-437,136,0,2,20,"Wauwatosa"],["Echelon Station",-680,106,0,2,304,"Wauwatosa"],["Robertson + Harwood",-532,67,0,2,29,"Wauwatosa"],["68th + Wells",-384,-4,0,2,11,"Wauwatosa"],["74th + State",-448,98,0,2,25,"Wauwatosa"],["Cathedral Square",373,14,0,2,32,"Milwaukee"],["Walker Square",221,-219,0,2,221,"Milwaukee"],["Brewers",-138,-139,0,2,483,"Milwaukee"],["Brewery District",212,62,0,2,143,"Milwaukee"],["MCW",-565,50,0,2,171,"Wauwatosa"],["Hart Park",-433,67,0,2,225,"Wauwatosa"],["MLK + State",290,32,0,2,7,"Milwaukee"],["Vel R. Phillips + Kilbourn",274,19,0,2,135,"Milwaukee"],["Wheel + Sprocket Bay View",343,-381,0,2,91,"Milwaukee"],["37th + Pierce",-81,-181,1,2,230,"Milwaukee"],["Mason + Prospect",410,1,1,2,39,"Milwaukee"],["22nd + Wells",78,1,1,2,143,"Milwaukee"],["Reservoir Park",394,244,1,2,234,"Milwaukee"],["Lafayette + Prospect",506,181,1,2,32,"Milwaukee"],["East Library",507,223,1,2,21,"Milwaukee"],["East Juneau Post Office",372,64,1,2,53,"Milwaukee"],["Wick Field",-213,98,1,2,110,"Milwaukee"],["Merrill Park",-64,-46,1,2,25,"Milwaukee"],["Clarke Square",62,-213,1,2,178,"Milwaukee"],["Riverworks",370,428,1,2,48,"Milwaukee"],["Fiserv Forum",269,62,0,2,172,"Milwaukee"],["Deer District",279,49,1,2,169,"Milwaukee"],["6th + Juneau",257,62,1,2,61,"Milwaukee"],["9th + National",225,-184,0,2,7,"Milwaukee"],["Mitchell Street Library",221,-307,0,2,19,"Milwaukee"],["Mitchell Park Domes",20,-174,0,2,21,"Milwaukee"],["MCTS Transfer",319,-306,0,2,4,"Milwaukee"],["MLK + North",295,224,0,2,21,"Milwaukee"],["27th + State",20,38,0,2,98,"Milwaukee"],["Washington Park",-115,99,0,2,19,"Milwaukee"],["Washington Park Library",-145,193,0,2,56,"Milwaukee"],["Humboldt + Locust",426,342,0,2,12,"Milwaukee"],["City Hall (Wauwatosa)",-478,220,1,2,110,"Wauwatosa"],["87th + William Coffey",-570,16,1,2,477,"Wauwatosa"],["92nd + Watertown Plank",-618,60,1,2,49,"Wauwatosa"],["5th + Mineral",270,-206,1,2,189,"Milwaukee"],["Couture",410,-30,1,2,28,"Milwaukee"],["Water + Wisconsin",337,-14,1,2,11,"Milwaukee"],["Zillman Park",363,-391,1,2,194,"Milwaukee"],["Veolia",317,-26,1,2,28,"Milwaukee"],["Downer + Linwood",585,366,1,2,214,"Milwaukee"],["Burleigh + Fratney",392,386,1,2,108,"Milwaukee"],["5th + Bruce",269,-164,1,2,108,"Milwaukee"],["Kilbourn + Marshall",399,30,1,2,167,"Milwaukee"],["Humboldt + Land",421,170,1,2,95,"Milwaukee"],["Jefferson + Clybourn",365,-38,1,2,140,"Milwaukee"],["KK + Logan",432,-491,1,2,33,"Milwaukee"],["Juneau + Water",312,62,1,2,21,"Milwaukee"],["Brady + Cass",391,143,1,2,101,"Milwaukee"],["Cambridge + Brady",467,146,1,2,2,"Milwaukee"],["92nd + Connell",-622,28,1,2,48,"Wauwatosa"],["MATC",242,34,1,2,100,"Milwaukee"],["Maryland + Webster",544,279,1,2,105,"Milwaukee"],["2nd + Bruce",305,-166,1,2,118,"Milwaukee"],["Jefferson + Menomonee",372,-97,1,2,423,"Milwaukee"],["Locust + Maryland",543,346,1,2,14,"Milwaukee"],["Murray + Greenwich",525,252,1,2,186,"Milwaukee"],["92nd + Doyne",-621,-1,1,2,141,"Wauwatosa"],["MSOE Library",360,30,1,2,165,"Milwaukee"],["MLK + Wisconsin",288,-11,1,2,20,"Milwaukee"],["Ogden + Humboldt",423,91,1,2,25,"Milwaukee"],["Park + Murray",523,306,1,2,179,"Milwaukee"],["Radio Milwaukee",333,-117,1,2,152,"Milwaukee"],["MSOE Diercks Hall",347,52,1,2,155,"Milwaukee"],["MSOE Kern Center",336,72,1,2,88,"Milwaukee"],["Postman Square",302,6,1,2,197,"Milwaukee"],["MCTS HQ",133,170,1,2,46,"Milwaukee"],["Webster + Downer",582,278,1,2,116,"Milwaukee"],["6th + Wells",254,0,1,2,11,"Milwaukee"],["Oakland + Providence",508,458,1,2,63,"Milwaukee"],["State + Van Buren",382,42,1,2,9,"Milwaukee"],["Tannery Row",399,171,1,2,243,"Milwaukee"],["18th + Wisconsin",120,-10,1,2,91,"Milwaukee"],["Downer + Newport",588,437,1,2,20,"Milwaukee"],["Farwell + Kane",487,171,1,2,9,"Milwaukee"],["North + Bartlett",492,223,1,2,76,"Milwaukee"],["Riverview",443,226,1,2,9,"Milwaukee"],["Kenilworth",526,207,1,2,17,"Milwaukee"],["North + Cambridge",472,226,1,2,26,"Milwaukee"],["11th + Greenfield",201,-258,1,2,19,"Milwaukee"],["Lincoln + KK",377,-411,1,2,36,"Milwaukee"],["Plankinton + St Paul",313,-62,1,2,222,"Milwaukee"],["Potawatomi",124,-97,1,2,151,"Milwaukee"],["Potter + KK",420,-477,1,2,54,"Milwaukee"],["6th + Virginia",260,-150,1,2,23,"Milwaukee"],["Vel R. Phillips + Wisconsin",275,-10,1,2,73,"Milwaukee"],["Fratney + Center",393,303,1,2,85,"Milwaukee"],["MLK Library",290,348,1,2,16,"Milwaukee"],["411 East Wisconsin",364,-14,1,2,46,"Milwaukee"],["North + 56th",-268,229,1,2,67,"Milwaukee"],["North + Hubbard",337,224,1,2,12,"Milwaukee"],["Wells + 27th",20,3,1,2,121,"Milwaukee"],["Walnut + Vel R Phillips",281,138,1,2,54,"Milwaukee"],["2nd + Florida",305,-142,1,2,106,"Milwaukee"],["Employ Milwaukee",232,87,1,2,119,"Milwaukee"],["Russell + Superior",490,-456,1,2,468,"Milwaukee"],["Summerfest Midgate",395,-79,1,2,499,"Milwaukee"],["Mitchell + 13th",180,-309,1,2,15,"Milwaukee"],["2nd + Freshwater",303,-117,1,2,152,"Milwaukee"],["Scott + 35th",-61,-233,1,2,9,"Milwaukee"],["Sandburg Hall",548,428,1,2,49,"Milwaukee"],["Burnham Park",-45,-329,1,2,165,"Milwaukee"],["Golda Meir Library",570,417,1,2,11,"Milwaukee"],["Oakland + Kenwood",503,386,1,2,20,"Milwaukee"],["Oakland + Bradford",506,263,1,2,11,"Milwaukee"],["23rd + Wisconsin",68,-17,1,2,84,"Milwaukee"],["Greenfield + 25th",38,-257,1,2,186,"Milwaukee"],["Riverside Park",504,322,1,2,19,"Milwaukee"],["McKinley Beach",582,178,1,2,440,"Milwaukee"],["Oklahoma + Delaware",591,-576,1,2,82,"Milwaukee"],["Wilson + Howell",366,-445,1,2,74,"Milwaukee"],["53rd + Bluemound",-244,-34,1,2,204,"Milwaukee"],["Lake Park",634,345,1,2,469,"Milwaukee"],["Humboldt Park",399,-547,1,2,285,"Milwaukee"],["North + Prospect",539,226,1,2,22,"Milwaukee"]],"hexes":[[10,-17,0,482,80,4,720,7761],[9,-16,0,482,80,4,0,7239],[10,-16,0,482,80,10,870,6909],[11,-16,0,482,80,2,700,6677],[12,-16,0,482,80,6,370,6551],[13,-16,0,482,80,0,1040,6437],[7,-15,0,2198,55,0,890,7278],[8,-15,0,482,80,1,430,6787],[9,-15,0,482,80,1,420,6376],[10,-15,0,482,80,0,730,6061],[11,-15,0,482,80,2,850,5859],[12,-15,0,482,80,0,1190,5781],[13,-15,0,482,80,0,940,5609],[8,-14,0,2272,76,4,10,5921],[9,-14,0,1092,70,4,90,5514],[10,-14,0,1092,70,0,0,5219],[11,-14,0,482,80,4,330,5057],[12,-14,0,482,80,0,1080,4996],[13,-14,0,482,80,0,1030,4793],[7,-13,0,2272,76,2,350,5565],[8,-13,0,1092,70,2,400,5056],[9,-13,0,1092,70,0,310,4653],[10,-13,0,1092,70,3,240,4386],[11,-13,0,482,80,0,610,4281],[12,-13,0,482,80,0,1470,4152],[7,-12,0,2272,76,8,30,4714],[8,-12,0,1092,70,8,20,4190],[9,-12,0,1092,70,4,20,3795],[10,-12,0,482,80,5,170,3569],[11,-12,0,482,80,2,830,3546],[12,-12,0,482,80,6,1040,3318],[6,-11,0,2977,29,2,90,4514],[7,-11,0,2977,29,1,80,3869],[8,-11,0,982,46,3,320,3325],[9,-11,0,982,46,2,240,2941],[10,-11,0,1839,61,0,370,2782],[-1,-10,0,3204,77,4,140,4426],[0,-10,0,3204,77,1,140,4386],[2,-10,0,2368,78,0,260,4726],[6,-10,0,1414,38,2,460,3726],[7,-10,0,982,46,4,30,3036],[8,-10,0,2136,73,4,110,2461],[9,-10,0,2583,83,4,130,2097],[10,-10,0,2583,83,2,130,2058],[-3,-9,0,2547,76,4,180,4114],[-2,-9,0,2547,76,0,190,3784],[-1,-9,0,3204,77,4,190,3636],[0,-9,0,3204,77,0,0,3690],[1,-9,0,2850,62,13,50,3914],[3,-9,0,2461,59,5,210,3563],[5,-9,0,3488,63,4,220,3571],[6,-9,0,3488,63,0,10,2980],[7,-9,0,2964,75,2,200,2229],[8,-9,0,994,68,4,300,1599],[9,-9,0,2442,88,0,490,1283],[10,-9,0,2240,62,6,310,1495],[-7,-8,2,1206,80,3,240,5741],[-6,-8,2,1206,80,3,270,5011],[-5,-8,2,1214,45,8,870,4331],[-4,-8,0,2766,63,4,520,3729],[-3,-8,0,2766,63,8,550,3248],[-2,-8,0,2918,68,6,550,2949],[-1,-8,0,2918,68,5,440,2889],[0,-8,0,2850,62,4,380,3081],[1,-8,0,2850,62,2,260,3334],[2,-8,0,2461,59,14,70,2998],[3,-8,0,2461,59,8,210,2742],[4,-8,0,2821,55,10,310,2747],[5,-8,0,2023,44,10,260,3013],[6,-8,0,6972,60,8,10,2319],[7,-8,0,994,68,11,160,1489],[8,-8,0,2442,88,13,160,747],[9,-8,0,2240,62,12,200,630],[10,-8,0,3589,96,9,290,753],[11,-8,0,3589,96,1,230,284],[-7,-7,2,1206,80,0,300,5009],[-6,-7,2,1206,80,7,600,4241],[-5,-7,2,1214,45,1,290,3519],[-4,-7,2,2222,73,4,300,2878],[-3,-7,2,2222,73,0,340,2383],[-2,-7,2,1713,66,4,330,2140],[-1,-7,0,3025,76,0,20,2231],[0,-7,0,2159,58,4,30,2490],[1,-7,0,1967,70,0,470,2604],[2,-7,0,1967,70,7,150,2136],[3,-7,0,2159,42,8,220,1960],[4,-7,0,2023,44,2,290,2150],[5,-7,0,2023,44,4,20,2217],[6,-7,0,6339,59,3,360,1696],[7,-7,0,994,68,4,170,984],[8,-7,0,1865,87,4,20,239],[9,-7,0,3410,90,8,40,559],[10,-7,0,2876,113,0,90,100],[-8,-6,2,1206,80,0,450,5154],[-7,-6,2,1206,80,0,350,4326],[-6,-6,2,1214,45,7,520,3516],[-5,-6,2,2228,78,6,460,2741],[-4,-6,2,2228,78,5,500,2040],[-3,-6,2,3586,74,2,40,1520],[-2,-6,2,1713,66,5,350,1399],[-1,-6,2,3075,78,2,410,1634],[0,-6,2,3075,78,2,450,1956],[1,-6,0,1967,70,4,370,1763],[2,-6,0,1967,70,2,200,1280],[3,-6,0,2159,42,9,10,1291],[4,-6,0,1651,51,6,390,1691],[5,-6,0,7658,32,7,10,1412],[6,-6,0,2052,53,10,220,1063],[7,-6,0,4594,92,4,210,202],[8,-6,0,988,81,8,180,300],[9,-6,0,3374,109,0,40,302],[-8,-5,2,984,60,0,230,4420],[-7,-5,2,984,60,3,440,3721],[-6,-5,2,984,60,1,340,2871],[-5,-5,2,2819,71,9,0,2035],[-4,-5,2,2819,71,4,620,1241],[-3,-5,2,4256,67,7,570,662],[-2,-5,2,4256,67,2,330,798],[-1,-5,2,3075,78,7,10,1090],[2,-5,0,5869,51,6,350,460],[3,-5,0,7567,44,8,160,996],[4,-5,0,8538,45,16,60,829],[5,-5,0,5736,37,8,380,681],[6,-5,0,2052,53,7,20,403],[7,-5,0,988,81,3,50,311],[8,-5,0,988,81,0,180,821],[-9,-4,2,984,60,0,230,3916],[-8,-4,2,984,60,2,30,3571],[-7,-4,2,984,60,9,310,3236],[-6,-4,2,3021,68,1,370,2371],[-5,-4,2,3021,68,4,730,1507],[-4,-4,2,2095,64,8,260,647],[-3,-4,2,2835,43,15,50,259],[-2,-4,2,2239,63,2,150,226],[1,-4,0,4095,59,9,430,507],[2,-4,0,7472,44,12,440,535],[3,-4,0,8665,37,6,130,649],[4,-4,0,5270,37,20,90,113],[5,-4,0,3307,32,17,130,394],[6,-4,0,2039,42,9,130,281],[7,-4,0,988,81,0,840,1142],[-9,-3,2,1111,77,6,360,3050],[-8,-3,2,1111,77,4,40,2733],[-7,-3,2,1681,80,3,170,2519],[-6,-3,2,1681,80,5,460,2000],[-5,-3,2,2547,70,6,390,1167],[-4,-3,2,2095,64,4,90,476],[-3,-3,2,2239,63,10,350,156],[-2,-3,2,4738,67,11,20,424],[-1,-3,0,251,28,7,30,1164],[1,-3,0,8121,40,16,290,194],[2,-3,0,6939,45,14,70,222],[3,-3,0,5988,46,16,50,113],[4,-3,0,6794,35,12,40,75],[5,-3,0,1797,49,11,10,35],[6,-3,0,988,81,0,480,848],[-9,-2,2,1111,77,2,320,2185],[-8,-2,2,1681,80,2,60,1920],[-7,-2,0,1193,55,0,140,1654],[-6,-2,0,1193,55,4,160,1497],[-5,-2,0,1162,60,3,20,1341],[-4,-2,0,2788,70,7,200,716],[-3,-2,0,2788,70,0,240,766],[-2,-2,0,251,28,4,230,1171],[-1,-2,0,251,28,2,170,369],[0,-2,0,251,28,2,170,315],[1,-2,0,251,28,4,20,312],[2,-2,0,251,28,0,530,649],[3,-2,0,251,28,2,550,620],[4,-2,0,251,28,6,90,2],[5,-2,0,1797,49,3,60,356],[6,-2,0,0,-1,0,300,650],[-10,-1,1,1431,83,2,30,1891],[-9,-1,1,1431,83,5,250,1319],[-8,-1,0,1193,55,4,210,1184],[-7,-1,0,1193,55,10,200,793],[-6,-1,1,2091,115,4,170,913],[-5,-1,0,1162,60,2,540,1165],[-4,-1,0,2731,68,7,620,712],[-3,-1,0,2731,68,2,500,719],[-2,-1,0,1040,83,1,390,494],[-1,-1,0,1420,45,0,200,645],[0,-1,0,4575,31,4,130,356],[1,-1,0,251,28,5,110,630],[2,-1,0,251,28,5,80,228],[3,-1,0,251,28,0,200,498],[4,-1,0,2280,133,9,40,163],[5,-1,0,2280,133,0,30,66],[-10,0,1,1431,83,0,220,1137],[-9,0,1,620,71,5,270,454],[-8,0,1,620,71,2,110,718],[-7,0,1,620,71,6,180,148],[-6,0,1,2091,115,4,70,529],[-5,0,1,2091,115,0,130,492],[-4,0,1,2885,115,1,340,378],[-3,0,0,1040,83,6,20,375],[-2,0,0,1040,83,6,20,785],[-1,0,0,1171,27,13,130,513],[0,0,0,6280,26,10,190,202],[1,0,0,6788,26,4,30,87],[2,0,0,7324,12,12,30,221],[3,0,0,3686,76,22,80,58],[4,0,0,6091,78,27,0,169],[5,0,0,0,-1,4,50,99],[-11,1,1,620,71,0,360,1531],[-10,1,1,620,71,2,150,713],[-9,1,1,620,71,4,110,415],[-8,1,1,620,71,6,110,349],[-7,1,1,2266,68,5,90,251],[-6,1,1,2266,68,9,90,210],[-5,1,1,2266,68,13,60,440],[-4,1,0,1954,59,6,270,930],[-3,1,0,1954,59,8,240,233],[-2,1,0,1954,59,9,30,283],[-1,1,0,4367,45,14,220,733],[0,1,0,3997,15,19,210,437],[1,1,0,2187,30,17,10,757],[2,1,0,2685,35,15,60,138],[3,1,0,6180,92,20,110,157],[4,1,0,5820,60,28,110,190],[5,1,0,0,-1,2,220,364],[-11,2,1,620,71,0,80,1521],[-10,2,1,620,71,2,70,1087],[-9,2,1,620,71,0,170,458],[-8,2,1,1767,135,0,220,271],[-7,2,1,2274,132,0,280,218],[-6,2,1,2274,132,9,290,146],[-5,2,1,2274,132,2,410,791],[-4,2,0,4188,105,0,50,700],[-3,2,0,1632,40,0,90,514],[-2,2,0,1632,40,12,170,584],[-1,2,0,2467,46,11,10,1138],[0,2,0,3183,61,4,80,505],[1,2,0,1940,48,8,90,449],[2,2,0,2891,20,17,40,148],[3,2,0,2935,65,8,50,184],[4,2,0,6563,60,14,330,86],[5,2,0,5272,93,4,20,339],[-12,3,1,794,77,6,130,2370],[-11,3,1,794,77,6,60,1858],[-10,3,1,620,71,6,10,1071],[-9,3,1,1767,135,6,120,206],[-8,3,1,2672,132,6,40,240],[-7,3,1,3301,101,14,50,53],[-6,3,1,3301,101,6,60,66],[-5,3,0,4396,85,9,50,353],[-4,3,0,3913,57,13,50,516],[-3,3,0,3513,43,14,40,354],[-2,3,0,3630,33,12,40,1066],[-1,3,0,2013,40,10,30,1052],[0,3,0,1572,55,10,20,551],[1,3,0,1500,34,16,10,627],[2,3,0,3261,42,12,0,82],[3,3,0,3900,63,14,80,195],[4,3,0,5672,44,10,10,44],[5,3,0,5684,55,11,10,23],[-12,4,1,794,77,0,760,2492],[-11,4,1,794,77,8,740,1690],[-10,4,1,1767,135,0,70,1000],[-9,4,1,1767,135,6,90,803],[-8,4,1,2672,132,4,110,755],[-7,4,1,4191,102,9,120,699],[-6,4,0,4087,34,4,120,711],[-5,4,0,4087,34,12,110,715],[-4,4,0,4252,54,12,100,1107],[-3,4,0,4744,48,12,100,1219],[-2,4,0,2195,21,15,100,1802],[-1,4,0,2127,14,6,90,1380],[0,4,0,3533,39,15,40,1263],[1,4,0,3938,27,17,70,567],[2,4,0,4629,33,13,60,467],[3,4,0,4108,64,9,50,401],[4,4,0,5672,44,10,150,69],[5,4,0,5684,55,6,170,185],[-13,5,1,794,77,6,90,3189],[-12,5,1,794,77,7,510,2462],[-11,5,1,794,77,2,400,1860],[-10,5,0,1707,106,9,450,1534],[-9,5,0,1707,106,4,650,1499],[-8,5,0,2743,93,12,90,1539],[-7,5,0,3571,82,4,220,1461],[-6,5,0,4060,51,12,200,1502],[-5,5,0,3518,50,8,170,1548],[-4,5,0,3260,34,14,200,1826],[-3,5,0,1536,28,20,650,2085],[-2,5,0,3724,51,10,210,2238],[-1,5,0,1906,36,17,50,1624],[0,5,0,2597,31,16,130,783],[1,5,0,3498,21,12,100,300],[2,5,0,5718,55,17,50,112],[3,5,0,4906,40,8,30,289],[4,5,0,3581,147,13,90,206],[5,5,0,0,-1,0,50,338],[-13,6,1,635,92,0,640,3282],[-12,6,1,635,92,0,420,2723],[-11,6,0,2492,94,0,380,2358],[-10,6,0,2217,64,4,310,2281],[-9,6,0,2544,54,0,30,2238],[-8,6,0,1256,55,1,330,2193],[-7,6,0,1256,55,7,710,2210],[-6,6,0,4060,51,0,150,2212],[-5,6,0,3518,50,4,320,2405],[-4,6,0,3260,34,8,290,2636],[-3,6,0,1536,28,3,230,2951],[-2,6,0,4517,31,4,170,2275],[-1,6,0,3402,28,2,390,1551],[0,6,0,3402,28,14,50,1064],[1,6,0,4059,30,6,170,323],[2,6,0,3478,59,6,60,667],[3,6,0,2702,66,8,130,141],[4,6,0,3985,149,5,160,224],[-14,7,1,635,92,5,450,4121],[-13,7,1,635,92,3,300,3588],[-12,7,1,635,92,4,280,3204],[-11,7,0,2492,94,10,120,3027],[-10,7,0,2217,64,3,280,2990],[-9,7,0,2100,74,12,100,2990],[-8,7,0,1256,55,4,590,2958],[-7,7,0,3447,54,8,310,2981],[-6,7,0,3672,47,6,300,3004],[-5,7,0,3344,34,7,100,3266],[-4,7,0,2688,23,12,150,3472],[-3,7,0,2688,23,8,190,3036],[-2,7,0,4264,27,14,130,2387],[-1,7,0,2389,36,13,140,1816],[0,7,0,940,36,4,370,1178],[1,7,0,940,36,11,230,990],[2,7,3,4574,53,11,170,741],[3,7,3,2516,150,9,220,866],[-14,8,1,888,74,0,40,4453],[-13,8,1,888,74,0,510,4059],[-12,8,1,888,74,0,40,3824],[-11,8,0,2696,50,7,250,3777],[-10,8,0,2696,50,2,450,3735],[-9,8,0,3010,50,9,280,3692],[-8,8,0,3010,50,2,460,3710],[-7,8,0,1445,53,5,30,3711],[-6,8,0,3955,31,4,460,3829],[-5,8,0,2138,43,2,300,4112],[-4,8,0,2138,43,2,250,3556],[-3,8,0,2199,34,11,130,2711],[-2,8,0,2199,34,6,620,1885],[0,8,0,940,36,0,550,680],[1,8,3,2727,88,8,130,1081],[2,8,3,4300,86,6,110,1425],[3,8,3,2516,150,0,530,1640],[-15,9,1,888,74,2,330,5319],[-14,9,1,888,74,0,240,4918],[-13,9,1,888,74,0,800,4645],[-12,9,1,888,74,3,180,4525],[-11,9,0,3253,54,0,260,4486],[-10,9,0,3253,54,8,280,4473],[-9,9,0,3509,51,2,460,4452],[-8,9,0,3010,41,8,40,4474],[-7,9,0,3077,36,0,10,4490],[-6,9,0,2736,30,2,590,4669],[-5,9,0,2138,43,8,240,3924],[-4,9,0,2199,34,9,160,3058],[-3,9,0,2383,39,5,230,2192],[-15,10,0,1131,51,2,30,5778],[-14,10,0,1018,65,4,380,5480],[-13,10,0,1018,65,4,650,5309],[-12,10,0,3307,49,11,120,5273],[-11,10,0,3307,49,10,60,5234],[-10,10,0,2919,59,9,380,5191],[-9,10,0,2919,59,4,290,5210],[-8,10,0,3690,47,6,450,5211],[-7,10,0,3251,37,4,410,5286],[-6,10,0,4115,26,11,50,4433],[-5,10,0,2279,37,11,30,3585],[-4,10,0,2383,39,2,210,2749],[-16,11,0,1131,51,2,180,6641],[-15,11,0,1131,51,1,80,6324],[-14,11,0,1018,65,0,570,6115],[-13,11,0,1018,65,7,100,6023],[-12,11,0,1972,36,4,510,5985],[-11,11,0,1972,36,6,430,5965],[-10,11,0,2546,37,4,60,5949],[-9,11,0,3153,36,12,240,5970],[-8,11,0,3153,36,6,20,5869],[-7,11,0,2489,42,12,130,5040],[-6,11,0,2245,31,12,260,4226],[-5,11,0,1885,61,4,260,3437],[-4,11,0,1885,61,8,240,2695],[-17,12,0,0,-1,0,910,7504],[-16,12,0,1018,65,2,570,7173],[-15,12,0,1018,65,5,100,6935],[-14,12,0,2712,53,4,90,6800],[-13,12,0,2226,46,8,100,6763],[-12,12,0,2226,46,5,150,6733],[-11,12,0,1985,50,10,150,6691],[-10,12,0,1985,50,12,160,6710],[-9,12,0,2579,29,9,170,6515],[-8,12,0,803,40,2,180,5714],[-7,12,0,2359,53,5,190,4935],[-6,12,0,2359,53,9,60,4191],[-17,13,0,644,78,0,670,8026],[-16,13,0,1025,65,0,470,7766],[-15,13,0,1025,65,0,20,7596],[-14,13,0,2712,53,2,480,7523],[-13,13,0,2535,43,0,630,7484],[-12,13,0,2226,46,3,240,7460],[-11,13,0,1985,50,0,100,7447],[-10,13,0,2579,29,11,660,7208],[-9,13,0,803,40,0,920,6435],[-8,13,0,803,40,6,680,5689],[-7,13,0,803,40,7,260,4981],[-17,14,0,644,78,0,620,8603],[-16,14,0,1598,51,1,810,8406],[-15,14,0,1598,51,4,10,8295],[-14,14,0,1473,66,8,70,8257],[-13,14,0,1473,66,5,930,8232],[-12,14,0,1473,66,10,840,8191],[-11,14,0,1473,66,4,510,7934],[-10,14,0,1477,62,4,340,7187],[-9,14,0,1477,62,0,440,6470],[-8,14,0,1477,62,0,70,5794],[-7,14,0,1291,41,3,70,5174],[-18,15,0,644,78,0,740,9446],[-17,15,0,1598,51,0,960,9226],[-16,15,0,1598,51,4,650,9083],[-15,15,0,1112,100,2,50,9022],[-14,15,0,1112,100,0,490,8983],[-13,15,0,1473,66,4,1360,8956],[-12,15,0,1473,66,0,990,8686],[-11,15,0,1473,66,6,130,7963],[-10,15,0,1477,62,0,730,7271],[-9,15,0,1477,62,4,800,6620],[-8,15,0,1291,41,4,50,6023],[-18,16,0,769,87,0,180,10053],[-17,16,0,1112,100,4,870,9885],[-16,16,0,1112,100,0,70,9791],[-15,16,0,1112,100,3,50,9753],[-14,16,0,1112,100,0,920,9732],[-13,16,0,1473,66,2,1440,9458],[-12,16,0,1473,66,0,570,8756],[-11,16,0,1477,62,4,280,8085],[-10,16,0,1477,62,0,1150,7455],[-9,16,0,1291,41,9,330,6876],[-19,17,0,769,87,1,480,10887],[-18,17,0,769,87,2,880,10697],[-17,17,0,769,87,0,460,10574],[-16,17,0,769,87,0,350,10522],[-15,17,0,541,52,0,490,10483],[-14,17,0,541,52,2,950,10245],[-13,17,0,968,43,0,950,9561],[-12,17,0,968,43,4,170,8909],[-11,17,0,968,43,0,700,8296],[-9,17,0,1291,41,4,130,7227],[-19,18,0,769,87,2,140,11517],[-18,18,0,769,87,1,140,11370],[-17,18,0,769,87,0,160,11288],[-16,18,0,541,52,2,30,11250],[-15,18,0,541,52,0,190,11044],[-14,18,0,968,43,4,190,10376],[-13,18,0,968,43,0,190,9740],[-12,18,0,968,43,6,180,9142],[-9,18,0,1291,41,0,10,7661],[-20,19,0,723,41,0,210,12343],[-19,19,0,723,41,0,570,12175],[-18,19,0,769,87,3,590,12068],[-17,19,0,769,87,0,580,12022],[-16,19,0,541,52,0,560,11852],[-15,19,0,541,52,0,550,11199],[-14,19,0,541,52,0,550,10577],[-20,20,0,723,41,1,750,12988],[-19,20,0,723,41,5,1240,12858],[-18,20,0,769,87,0,1340,12786],[-17,20,0,769,87,5,1180,12668],[-16,20,0,541,52,1,1220,12028],[-15,20,0,541,52,2,1260,11418],[-21,21,0,723,41,0,1520,13808],[-20,21,0,723,41,0,1600,13658],[-19,21,0,723,41,0,1720,13562],[-18,21,0,723,41,0,900,13490],[-17,21,0,1261,27,2,370,12862],[-16,21,0,1261,27,2,950,12263],[-15,21,0,1261,27,0,420,11698],[-21,22,0,723,41,0,2250,14466],[-20,22,0,723,41,0,2140,14349],[-19,22,0,723,41,0,1290,14284],[-18,22,0,723,41,0,480,13700],[-17,22,0,1261,27,2,110,13110],[-16,22,0,1261,27,6,340,12553]],"geo":{"mun":{"Milwaukee":"-985 906,45 -9,-4 -183,313 2,-1 -158,-26 5,0 10,-5 0,-1 -19,-12 0,3 17,-22 -5,0 -8,-14 7,-3 11,8 14,-7 9,3 33,5 0,0 -19,13 -5,34 25,-3 11,-54 1,-41 0,0 -82,-5 -5,-36 0,0 -5,67 0,10 -7,4 -26,-5 0,0 -10,5 -2,-5 -5,5 -1,-5 0,0 -12,5 -3,-5 0,0 -17,-5 0,2 -38,29 -12,-3 10,6 0,5 -6,-7 -6,10 -16,-7 4,-10 -5,2 -6,-22 -4,0 -5,22 1,4 -33,-14 -34,-12 0,0 -13,7 0,1 -6,235 5,9 1,0 21,41 -1,-1 -15,73 0,0 -21,11 0,0 16,24 0,0 -36,14 0,0 -269,28 0,-5 -15,5 -5,-6 0,-2 -14,-20 -1,0 -7,-10 7,0 -7,-10 -1,0 6,-15 -1,0 -6,-28 3,-3 -12,-10 1,0 -16,-36 1,-3 18,-65 -9,-53 12,-9 -43,8 -9,-60 -2,0 53,14 0,0 33,-78 -2,1 -36,-89 -9,-39 4,-1 -45,11 0,8 -48,53 -16,107 -3,8 -13,340 4,0 -64,105 26,1 38,58 0,0 -31,5 0,-1 -50,-46 0,0 -28,6 0,1 -13,32 1,0 -11,-31 0,1 -24,44 -4,-1 -75,-61 -1,0 -24,-73 34,15 -10,-15 0,-1 -41,-56 1,-9 -15,-13 -6,-9 4,0 11,-110 3,-2 -119,-289 -3,0 -161,186 2,0 -43,130 2,48 42,23 0,0 -20,-21 0,-1 -20,37 -7,1 9,35 3,0 30,-1 5,-9 0,1 54,-9 -7,0 9,17 10,-2 9,16 4,3 -5,-14 -11,3 -102,-40 -1,-1 -40,40 0,0 10,41 0,0 -10,5 0,1 46,28 0,1 24,-7 0,0 11,12 0,1 -11,7 11,16 -1,2 12,-4 12,-24 0,1 29,-17 0,0 -32,-20 0,0 20,-15 0,-1 -12,-5 0,-4 6,0 41,8 0,0 10,34 22,-2 5,39 32,0 7,-7 -6,0 10,9 -9,6 9,4 -9,-16 -13,4 -4,18 7,10 -5,-1 -79,-21 0,1 -39,5 0,0 -7,14 -1,0 -19,7 0,-3 13,23 1,1 14,38 0,0 13,15 0,5 38,10 11,15 -5,10 4,0 -24,-7 -8,8 -7,-23 -24,18 0,-1 -12,44 0,-5 -336,-65 0,-8 13,-17 0,0 -18,-17 -2,-8 2,0 18,-10 0,-1 -73,5 0,0 -8,120 0,-1 -80,75 -1,-3 -105,81 0,5 105,322 -3,-2 -82,12 0,48 405,-52 1,0 57,-36 21,1 79,17 0,0 -21,-9 0,0 -7,28 -1,0 5,-10 0,0 7,12 0,0 16,8 0,-1 -15,15 0,1 53,-5 0,0 23,-14 0,0 21,48 -1,2 -4,65 4,1 50,25 19,10 -9,11 8,-45 43,-29 19,-10 16,-6 0,-23 34,1 11,-12 1,-24 33,-6 -2,9 9,-10 10,29 28,-26 37,-33 -11,-18 55,21 26,-21 -24,-13 40,20 25,-7 16,-19 -23,-3 10,19 23,-4 10,-19 -22,-2 8,25 31,-4 23,-31 -5,-3 14,29 1,-5 1,0 28,16 21,-7 55,-4 -10,-9 -3,2 -9,-8 -10,12 -17,-1 -14,-12 -7,-8 15,6 41,9 4,-5 24,15 1,1 7,9 1,-2 -28,3 4,3 26,-27 3,14 52,51 5,23 14,16 22,18 -1,-37 4,-13 -18,-16 11,11 15,-7 10,19 26,-5 8,9 5,-4 14,8 -15,25 -6,1 -9,1 11,6 0,19 -40,-4 -23,-11 -3,10 1,1 -7,5 31,-22 50,7 8,-4 6,12 5,39 48,6 25,26 36,15 12,10 0,7 25,32 44,0 38,-24 4,-33 82,-170 0,-14 45,-50 46,-10 22,0 38,-15 15,-25 8,-11 11,0 60,-80 7,1 -14,32 -22,24 -6,18 -21,-1 -102,-71 0,-3 35,-17 21,16 0,0 5,-22 0,6 -8,-49 0,-13 29,10 0,-12 5,-14 31,29 -1,-9 55,-12 13,-24 7,-3 11,27 28,30 9,0 38,25 44,-56 1,3 -41,-46 1,-9 41,-48 1,0 -22,13 -18,-40 0,-5 -34,-15 -1,1 12,14 -2,1 26,-18 0,1 18,17 16,-13 6,-1 20,-5 0,2 82,-72 225,76 -2,3 115,-46 48,-60 1,0 -9,-18 0,23 -72,-63 1,-2 -81,-80 0,4 161,-162 1,5 326,-563 -4,-16 -742,-40 1,-7 -44|-948 1720,-5 0,21 -29,10 0,0 29,-26 0","West Allis":"-965 -645,0 -11,173 -2,1 41,40 0,1 40,326 3,2 119,110 -3,0 -11,9 -4,13 6,9 15,56 -1,1 41,15 0,-15 7,0 53,9 0,0 21,-46 0,0 20,-5 -4,2 139,-340 -4,-8 13,-104 2,-45 11,-11 6,-8 48,-172 -1,-13 -544|-898 -673,0 -24,25 -1,0 25,-25 0","West Milwaukee":"-266 -314,5 3,0 -20,46 0,0 -21,-9 0,0 -50,73 -34,0 24,61 1,1 75,-44 4,-1 24,31 0,0 11,-32 -1,-1 13,-6 0,0 28,46 0,-4 81,-58 0,-1 -38,-106 -27,-1 -73","Wauwatosa":"-952 -101,161 1,1 45,39 -4,89 9,-1 36,78 2,0 -33,-14 0,0 -53,60 2,-8 9,9 43,53 -12,65 9,3 -18,36 -1,0 16,10 -1,3 12,28 -3,0 6,15 1,0 -6,10 1,0 7,10 -7,0 7,20 1,2 14,6 0,-5 5,5 15,-28 0,0 269,-14 0,0 36,-24 0,0 -16,-11 0,0 21,-73 0,1 15,-41 1,0 -21,-243 -6,-9 6,0 13,12 0,14 34,-4 33,-22 -1,0 5,22 4,-2 6,10 5,7 -4,-10 16,7 6,-5 6,-6 0,3 -10,-29 12,-2 38,5 0,0 17,5 0,-5 3,0 12,5 0,-5 1,5 5,-5 2,0 10,5 0,-4 26,-10 7,-67 0,0 5,36 0,5 5,0 82,41 0,54 -1,3 -11,-34 -25,-13 5,0 19,-5 0,-3 -33,7 -9,-8 -14,3 -11,14 -7,0 8,22 5,-3 -17,12 0,1 19,5 0,0 -10,26 -5,1 158,-313 -2,-8 -815","Shorewood":"349 652,6 -10,30 -10,15 -15,0 -38,10 -22,50 -46,14 -45,170 0,2 50,-28 65,-19 74,-85 -3,-5 16,-160 2,0 -18"},"lake":["395 1042,8 -86,22 -69,59 -98,115 -132,47 -141,6 -75,25 -57,24 -5,-2 -42,-37 -64,-15 -3,-39 -52,-2 -18,-52 -51,-1 -26,-26 1,-15 19,4 -14,-27 -64,16 -11,13 18,37 -4,-18 1,-39 -36,-51 -5,-14 -52,18 -3,-5 -10,-15 -1,5 -24,-9 -4,-6 -41,8 -15,12 7,-11 31,19 32,7 -49,-16 -25,0 -30,14 -33,-25 -32,2 -8,18 22,-11 -43,19 23,7 -16,-20 -25,31 -97,32 10,27 -36,-29 -28,10 -10,-9 -9,30 -31,12 -1,3 -18,35 -43,111 -92,62 -67,16 -3,-2 -18,39 -61,40 -93,6 -49,-7 -31,17 -43,2 -92,-24 -150,18 -91,36 -69,1 -21,-12 -25,1 -50,-32 14,22 -13,-14 -5,3 -12,-22 -18,-16 -68,9 -74,27 -3,-2 -55,-23 -14,16 -35,8 -81,75 -210,39 -60,7 -7,17 5,10 -25,-25 -10,17 -41,6159 -1,-318 3144,-86 731,-49 9,-2034 -8,0 14,-4212 -2,52 -78,44 -160,-34 -98,-23 -32,-30 -105,-75 -142,-5 -32","309 2311,8 -95,17 -74,31 -81,68 -122,7 -63,-14 -83,40 -104,4212 2,0 -14,2034 8,49 -9,-229 2101,73 1335,9 0,19 460,-1955 16,-3391 1,-19 -198,7 -125,-6 -150,24 -83,-83 -213,-19 -106,-60 -103,-14 -53,-18 -12,-54 -77,-47 -94,-92 -135,-121 -152,-86 -155,-9 -38,10 -8,-14 -2,-10 -23,-6 18,-5 -17,10 -8,-27 4,52 -23,-6 -13,-30 13,16 -12,-5 -12,-15 6,-21 -29,-46 -129,-37 -185,-33 -260,1 -75,-21 -86,-5 -86,-9 0,-7 -29,8 0,-16 -47,-37 -66,-43 -112,-75 -317,-10 -86"],"LINER":"-26 2946,-2 -9,-25 -10,-15 -22,28 -9,38 11,20 -11,34 1,14 -4,12 -16,-54 -77,-22 -9,-4 -37,-14 -26,11 -11,38 8,30 -7,16 -22,-28 -62,-15 -6,-22 5,-14 -23,7 -48,12 -8,27 4,10 -20,-5 -23,-21 7,-12 -5,2 -15,21 -31,-13 -18,-11 -51,20 -35,32 -22,35 -53,28 -23,3 -30,-24 -23,-38 -6,-28 -27,-16 0,-10 13,-12 0,-29 -28,-17 -7,-24 -4,-22 12,-33 -27,-83 -21,-56 -3,-11 -8,-6 -20,10 -50,14 -27,18 -23,32 -22,4 -25,15 -22,1 -37,42 -40,26 -68,1 -22,34 -13,20 -27,-1 -15,-26 -24,-2 -27,23 -31,23 -55,-5 -29,-21 -13,-7 -14,-2 -28,13 -7,34 10,25 -2,36 -24,33 -8,42 -26,3 -14,-14 -27,13 -16,28 -14,-13 -34,41 -65,12 -86,55 -45,0 -10,-24 -40,-14 4,-7 16,-7 -4,-2 -71,24 -29,19 -41,27 6,31 -3,2 -7,-68 -111,4 -49,-18 -28,0 -56,8 -5,66 11,66 -40,14 -22,29 -11,17 -15,-3 -27,12 -33,54 -55,9 -35,-9 -38,4 -64,-20 -55,18 -54,-13 -53,-11 -9,-42 -7,-54 -56|-985 902,-47 -41,18 -64,17 -7,3 12,31 23,43 -2,0 -11,28 -19,10 -26,18 -5,10 -12,2 -58,-15 -10,-8 -30,16 -39,-6 -44,13 -10,6 -21,16 -6,5 -20,18 -13,43 -12,14 -13,16 -29,-2 -26,30 -23,10 -46,-5 -7,-12 -1,-2 -9,4 -36,8 -11,-8 -18,20 -41|-718 1693,17 -103,1 -58|-1482 1688,19 -6,31 6,29 -9,12 -23,17 -8,0 -19,10 -15,30 -20,-5 -44,21 -38,23 -7,21 -27,106 6,31 15,15 -20,7 -24,19 -16,2 -19,18 -11,1 -13,-9 1,10 -11,-2 -19,9 -8,6 -28,40 -18,28 13,40 -15,50 -33,11 -45,-12 -17,0 -17,14 -7,1 -12,-17 -19,9 -5,-16 -23,-8 1,-13 -32,6 -28,-11 -17,12 -14,-19 -57,-27 -35|-20 -549,13 13,51 -5,22 16,26 -11|96 -539,18 -6,14 12,-12 37,0 18,7 6,92 -1,41 -16|217 778,17 -14,1 -19,-8 -8,-28 -5|215 794,-27 -10,-22 -21,7 -19,25 -14|286 -495,18 14,12 37,0 22,-21 37,-1 30,43 2,15 8,38 90,-22 50,3 16,15 19|-809 840,-14 -14,-5 -25|-619 1450,5 -70,-8 -8,-10 -34,11 -27,-6 -7,2 -36,9 -19,0 -25,-11 -42,-17 -22,-10 -63,-9 -7,5 -10,-11 -3,-12 -16,10 -15|-143 -77,12 -84,18 -12,38 2,91 39,8 43,23 7,97 2,84 -8,31 12,59 -12|-123 -13,1 -15,-23 -39|-95 -467,22 -76,19 -9,34 3|-300 -485,1 10,25 12,12 15,8 -3,0 -16,7 -3,21 24,15 -2,12 -25,14 -12,26 -1,13 9|-143 -477,10 7,0 21,21 -10|-268 28,48 6,32 -15|-304 24,36 4|-188 19,9 10,25 -7,31 -35|-976 950,-9 -48|344 128,-31 -32|312 96,-13 -20|299 62,1 -32,25 -45,-7 -73|-646 1484,27 -34|-699 1526,7 -11,46 -31|318 -88,46 -40,22 -42|-673 1042,-9 -27,-22 -29,-77 -85,-6 -35,-21 -25,-21 -43,-3 -58,-19 -13|386 -170,62 8|-629 181,36 -14,0 -29,17 -14,34 -12,16 2,10 -9,19 5,20 -5,24 -19,7 -24,9 -8,38 7,36 -29,59 -8|256 -489,8 -9,22 3|-691 227,62 -46","LINET":"351 25,1 2,19 3,-3 34,1 26,64 0|357 -52,-1 14|433 90,-64 1,-2 -27,3 -33,-22 -3|280 -59,40 1|346 -52,-2 -3,-15 -1|355 -30,-4 55|348 28,-7 -1,-2 -2,7 -77|403 -37,-45 -3,-2 2|355 -30,2 3,30 2|320 -58,-40 -1|438 87,-5 3|329 -57,20 2|349 -55,8 3","LINEP":"547 418,40 0|-515 -168,-31 1|413 5,20 40|-951 -108,11 -46,25 -14,5 -13|373 -123,-2 30|433 316,15 29|130 95,-1 -38|434 -62,-5 25|443 -116,11 22,-8 27,-8 1|-62 50,74 -1|-83 -175,-73 4|508 38,-24 -9,-37 -1|508 38,28 33|378 -1543,-20 53,-12 7|434 -1706,-55 161|431 567,-36 76,-28 36|-192 1694,29 -91|476 318,-2 104,7 53,-37 69|522 149,37 12,34 36,16 34|639 278,-41 -48,-16 -5|484 125,30 37|498 225,-18 65|255 715,-42 -3|414 572,-10 10,1 31,-14 25,-30 28,-17 -2,-8 10|197 786,3 38,21 35,-1 13|178 1124,-3 27,-21 51|181 742,14 1,1 39|-864 33,42 21,18 14,10 23,17 4|-927 -293,-1 -36|17 -100,-42 6|542 -485,21 -28,126 -111|689 -624,-61 46|-408 -173,-57 3|-548 -167,-79 2|448 -437,9 -27|457 -468,-6 27|-501 110,-73 20,-17 38,-39 17|637 331,1 47,16 2|-919 -409,19 2,13 14,-1 29|131 49,1 91|-653 -165,-98 9,-167 82|-951 -108,-11 13,1 40,9 10|363 169,-32 -30|-873 -661,15 -67,30 -12,7 4,-4 -8,29 -26|331 -321,3 65|-560 -1331,-7 8,8 19,-8 -14,-27 4,-20 14,-7 40,7 13,17 5,-13 17,-3 -17,-16 -2,3 -11,7 4,-14 -26,12 -14,-2 -27,17 -11,-13 4,-5 -5,64 -1|557 -1487,16 -4,40 24,24 32|825 -832,-24 69,-28 46,-17 -7|-886 -1500,2 126|-848 690,-2 -61|-835 729,30 67,-22 4|-829 800,-8 4,17 62,32 14|-780 884,22 29,-1 10|29 -132,-73 -36,-39 -7|-270 25,15 1,9 -19,21 -3,20 14,9 -9|-502 -455,-7 -32|200 -288,34 0|-198 473,40 23|-222 461,-76 -63|41 48,53 -1|18 51,-80 0|-397 -1389,48 -38,-4 -42,18 -41,-29 -29|177 735,-22 13,3 23,-14 5,-3 19|320 -412,1 -42,-12 -27|-654 1126,-21 -54|-608 1367,-7 -25,2 -36|-88 1369,-25 81|33 986,-18 56|-34 1207,-28 80|-113 1466,-7 2,-14 62|185 -1540,47 -2|288 -497,-34 -8|150 878,-29 27|201 832,-46 42|264 774,-48 44|-291 1074,1 40|634 399,-6 67|628 325,7 55|-882 -331,-45 0|-790 -330,-70 -1|419 9,14 36|453 78,31 47|609 232,57 61,9 54,-8 29,-13 6|702 -696,-37 -13|119 907,-86 79|-436 1694,16 -13,27 1,27 -24,5 -44,34 0,4 6|259 -110,21 7,0 23,-23 0|-289 1159,0 30|-290 1114,1 34|-931 1318,0 45,262 3|5 774,-8 -9,0 -17|-126 97,-1 -31|470 -1547,1 22,21 10,-3 16|-370 -1321,11 -40,-18 -2,-17 -22|-964 -1532,-131 -3|217 139,32 0|489 123,31 25|-754 948,55 67,5 29|-310 -175,-77 2|425 199,24 8|372 15,2 -27|-404 -1281,-24 -14|-501 -1338,-12 14,0 16,-39 4,-2 12|-285 1308,1 48|397 193,-32 -22|451 225,-1 39,-17 52|355 -186,-13 -34|-364 -1540,-3 -42|-753 -819,19 -73|-670 229,-28 29,-10 62,14 32,-3 36|-215 1768,23 -73|428 -30,19 58|390 -1546,25 0|-85 -169,-30 0,-12 8,-4 43|50 -91,-1 6,41 2|136 -94,-83 -1|-638 1166,-16 -40|-218 -162,-52 -13|15 1043,-49 161|-288 405,66 54|20 -1535,50 -1|77 794,-49 -19|-198 1615,-80 -4|440 -121,7 12,-5 18,-8 4,4 21|-789 -117,3 59|181 1002,-14 65|-715 -817,1 28,16 7,224 0|-155 499,-46 -26|315 -1546,36 1|121 -1534,29 -2|284 -1544,27 -1|815 -1282,-7 7,7 21|815 -1253,-4 33|-555 -1294,28 -14|-1029 306,-38 3,-7 34|-399 -1302,7 -17,22 -2|304 699,-32 12|309 733,-38 35|332 712,-22 20|489 -1497,11 13,56 -3|639 -1433,1 29|-919 -73,-27 13|168 1081,12 35|-62 1288,-25 80|-242 1856,27 -87|-614 1205,-13 -36,-10 -3|-611 1287,-3 -78|-666 1366,41 2|-467 -169,-44 1|709 -657,-20 33|-859 554,-16 0,2 69,-5 7,12 -2,0 -20,7 -9,-7 -30,7 -15|-874 607,0 -37,7 -6,-6 -7,8 9|-853 714,-2 -23,-20 -19,-3 -41|-900 796,-24 17,0 -11,6 2,-4 -5,22 -3|-779 -772,12 -7,14 -38|-956 -331,-164 -1|-697 391,-8 17,-27 19,-1 27,-9 17,-52 36|470 -1547,3 -59|-33 -1538,27 -1|89 49,-59 0|-163 1603,27 -66|825 -832,-18 15|-631 185,-14 6,-23 35|-870 756,7 -20,9 3,-1 -17|-878 631,8 58,-6 -3,14 27,9 1|367 680,-34 31|130 140,0 -37|-270 -175,-25 -1|-753 -819,38 1|728 -690,-26 -6|-400 -782,68 2,13 -10,1 9,7 0|-125 516,-25 -14|-31 1291,-32 34,-5 27,16 10,40 -5,17 -17|422 205,-25 -12|-850 724,1 -33|-309 -781,101 11,139 -15|-119 -771,1 36|101 -83,36 -1|436 -1546,34 -1|153 -1539,31 -1|5 1340,22 -15,1 -37|-288 1220,2 68|333 -221,2 -33|158 1186,26 -49|184 1137,4 9,-30 40|-873 606,7 -37|173 1113,-23 -5,4 -17,-8 18,2 -37,4 15,4 -7,-2 8,12 2,3 22|-555 -1294,-20 9,-22 43|168 141,-27 1|107 686,0 28|107 717,1 41|108 760,-1 36|409 -735,-34 0|361 -737,40 0|-222 459,24 14|106 678,-48 20|136 798,-29 1,-7 10,-18 -10|-763 226,-28 -1|111 602,-3 27|-220 29,11 -5,-12 -5,-9 8,0 -7,-10 5,-1 -12,-3 11,-3 -8,-4 4,31 9|25 1288,-13 -8,-17 3|-943 -1533,33 -1,5 12,19 -1|-777 95,13 35,-9 23|-772 167,22 11|-846 9,43 3|-648 53,-17 -40,-1 -29|607 -552,-34 31|-626 -3,-36 1|-568 1612,15 33,37 20,-5 4,10 9,34 8,19 -6,18 14|-550 461,-81 45|-633 508,-1 -5,-79 47|-713 543,80 -48|-631 495,80 -37|305 -472,9 47|-720 -928,-26 -37|501 -443,8 1,26 -28|-471 -782,66 0|-418 395,-131 66|-531 449,110 -55","LINEL":"-61 880,-72 2|-576 160,-43 25|35 1123,2 73|-149 -85,4 65|-63 -92,1 -104|317 306,107 -1|505 325,123 -1|-305 312,-49 0|13 -816,156 -1|294 995,-97 2|789 -1439,-145 4|-900 11,-31 -17,-9 -25|96 -371,-41 -31|-423 807,44 34|341 -116,28 -48|-691 1246,1 41|-873 66,-2 147|-236 -990,2 -67|187 141,1 70|-469 208,-115 -3|-9 154,64 -12|-969 -818,-162 -2|628 326,-123 1|230 388,-47 0|-415 883,61 -1|-132 881,71 -2|-294 883,-60 1|-557 -1058,44 0|90 -895,-69 0|-619 807,-1 -53|17 1042,125 -4|424 245,1 56|363 249,1 57|-36 1125,-11 55|248 -908,0 -44|248 -977,-1 -80|254 -413,-79 0|516 384,50 0|590 385,45 0|367 -757,79 -58|353 -632,-20 -53|-108 800,86 -1|18 -132,0 67|172 -575,-2 -160|504 237,1 67|588 466,-1 -48|588 466,1 68|321 -1274,-3 -95|418 -382,-62 7|-689 881,28 -29|171 -655,-40 1|-488 115,-70 13|212 -221,-55 1|-214 883,-1 -83|-374 965,-1 -81|235 477,-113 69|-639 153,-17 27,-29 14,-41 -19,-24 3|93 36,-67 0|-466 598,24 -42|-376 883,-4 -40|-380 843,-43 -35|-657 308,-47 -1|-632 633,-1 -80|541 -576,30 -75|-658 -375,-44 0|-530 -15,13 51|-618 752,1 47|131 -654,-1 -81|-472 779,-34 -33,-42 -6|291 391,-33 73|364 346,2 98|265 468,2 72|-374 884,1 80|147 716,-115 1|87 715,60 -1|-550 737,-40 42|-670 884,-48 0|-389 -575,-1 -92|-307 -493,-1 -81|-310 -735,-1 -46|-308 -595,-1 -59|-307 -574,2 81|177 233,-12 91|-492 1369,-65 0|-707 594,51 38|-466 -13,71 0|-29 1061,-27 -17,-33 -1|-639 -495,-59 -1|-308 -653,-161 -2|-466 -255,1 78|424 305,-1 -58|427 475,-2 -89|425 386,2 89|169 -816,-156 2|-437 -813,129 111|-870 -330,1 56|105 643,-53 -29|-299 700,0 -46|-218 666,4 93|227 1636,-12 50|99 96,-41 0|186 50,0 45|505 345,1 40|585 263,1 62|-869 -368,1 -41|-871 -274,0 -56|136 -372,-1 -40|-662 92,-22 35|-630 308,162 4|-354 312,-73 0|-468 240,0 61|-376 738,1 64|548 466,40 0|507 466,41 0|586 344,0 41|-101 169,86 -13|-176 98,46 -1|265 -255,-118 0|132 -255,-52 0|-62 97,-48 0|-213 883,-61 0|-274 881,61 0|137 1120,-102 3|101 228,1 101|160 347,52 -1|-523 885,-94 0|-305 312,102 -1|-89 310,-52 0|2 -1373,1 52|229 307,-40 0|-300 646,-1 -90|-656 634,-35 -26|512 205,-40 -57|123 470,-16 40|113 3,-45 0|-310 -786,2 51|-955 -576,62 -1|-739 470,-55 38|-549 736,43 8,49 38|-559 717,-52 -46|-66 -603,-1 -50|-67 -653,-40 -1|-67 -653,-1 -72|87 -654,-56 1|-562 -736,-60 -1|-305 -412,0 -40|-149 -748,0 -42|149 389,-23 76|-698 272,-9 48,14 34,-3 34|66 615,-15 40|-214 800,80 -1|160 308,-52 1|317 -1457,2 48|814 -1140,-41 0|569 -1142,46 0|-872 -262,-48 0|-617 807,0 65|-608 795,66 -69|-198 43,-67 -1|546 386,-40 -1|506 418,1 48|-436 885,-40 0|-349 -734,-95 -82|316 -897,-48 0|-206 -617,50 41|92 410,-59 63|-202 392,-55 0|6 -409,-61 -1|-224 145,-54 0|-224 143,42 -1|128 -268,-30 -39|-297 143,73 0|92 309,-71 1|-390 -736,1 47|-389 -667,1 92|-206 -616,-46 -37|-82 -512,-31 -26|-118 -544,37 30|-238 -643,32 26|-316 -706,-33 -28|-266 -666,-42 -34|-418 -259,-45 0|323 -1275,2 45|-389 -655,75 0|-280 1611,3 67|-610 -888,55 2|-555 -886,-55 -2|102 349,1 41|355 -376,63 -8|732 -889,0 41|320 -412,44 0|372 -521,-1 -50|247 -1059,63 29|-472 -655,-228 -1|-672 -657,116 1|249 -745,0 -69|454 -504,55 -28|249 -817,-1 -71|168 -1058,-42 1|170 -737,-1 -79|96 -371,37 28|511 -532,30 -44|375 -517,25 -11,12 -46|374 -415,42 -61|-16 961,10 -74|-632 723,0 -42|732 -899,0 -90|-108 800,-18 40|-871 -181,0 -41|-304 -331,0 69|-715 882,46 0|-1 -1409,-1 -49|181 36,-42 0|-502 -454,-46 0|-192 -3,-68 1|205 348,-46 0|620 -1142,110 1|-459 -831,-40 -37|23 483,-38 54|-486 555,-64 -1|-467 554,-1 -161|-695 551,57 0|443 1442,1 65|-41 1140,16 -99|-618 883,-1 -68|-617 895,2 45|-685 128,21 -38|-215 759,-4 -95|-214 759,0 41|-214 801,1 41|-215 800,0 -41|-294 800,75 0|-423 807,45 -5|-454 965,81 -1|423 591,-30 59|378 672,-29 29|178 -312,-2 -81|103 398,1 73|-609 670,52 52|175 -413,-1 -63|0 -1459,1 50|-2 -1461,-2 -51|-2 -1532,2 73|4 -1222,-2 -57|-307 -574,101 0|-206 -573,-101 1|-252 -653,-56 0|-148 -654,-68 0|-466 -177,-1 -78|-181 1368,53 0|-617 940,-1 -46|320 -1379,3 104|-880 -495,-68 0|-486 636,-42 72|11 -896,75 -1|-309 -654,0 -47|4 -1278,2 44|368 -420,-1 -64|-159 -576,-47 -40|96 -411,-44 1|13 -443,0 -47|81 -330,-30 -72|180 95,-48 0|-493 90,-15 -11,-6 -33,20 -13,1 57|138 -220,-41 0|8 -976,-222 0|-383 75,2 47|-893 -575,-60 0|-630 186,-35 38|-865 222,41 -5|-648 56,-13 33|-613 1206,-1 -45|88 -997,-1 -56|-468 392,0 -75|96 -232,-55 0|-56 638,-18 57|-308 -702,57 48|-308 -654,47 0|-466 422,0 47|31 716,52 -1|-27 1061,-8 59|174 -512,-2 -62|34 1041,1 82|-133 800,-78 1|-155 1449,-87 0|132 -577,-1 -77|-213 881,50 0|169 -816,0 -44|-375 802,-44 2|730 -1140,-156 -1|-49 1180,8 -40|-690 1287,4 27,21 24|773 -1140,-43 0|-551 -656,75 0|-390 -692,0 -44|-513 -1057,-44 0|-354 882,59 -1|-354 884,-61 1|-558 128,-18 32|308 -1029,-57 -26|-82 721,-26 79|-307 -649,0 54|86 -1168,-1 -46|86 -1217,1 49|366 467,1 43|-156 882,-57 1|394 346,0 40|-696 388,-28 35|-612 1141,1 65|-388 -575,1 85|-387 -490,-2 -85|-214 801,-76 0|-619 809,-40 44|-661 852,38 -41|256 -221,-43 0|317 -1386,-4 -136|80 -255,-51 -1|-326 -367,-55 -42|143 1039,-126 3"}};
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const NS="http://www.w3.org/2000/svg";
+const el=(t,a={},p)=>{const e=document.createElementNS(NS,t);for(const k in a){const v=a[k];if(typeof v==="string"&&v.indexOf("var(")===0)e.style.setProperty(k,v);else e.setAttribute(k,v)}if(p)p.appendChild(e);return e};
+const fmt=n=>n.toLocaleString("en-US");
+function dec(s){const out=[];let x=0,y=0;for(const p of s.split(",")){const [a,b]=p.split(" ").map(Number);x+=a;y+=b;out.push([x,-y])}return out}
+const path=pts=>"M"+pts.map(p=>p[0]+" "+p[1]).join("L");
+
+/* ---------- MAP ---------- */
+const svg=document.getElementById("map");
+const full={x:-1060,y:-1760,w:1880,h:3200};
+const start={x:-900,y:-1150,w:1650,h:1850};
+let vb={...start};
+function setVB(){svg.setAttribute("viewBox",`${vb.x} ${vb.y} ${vb.w} ${vb.h}`);sizeStations()}
+const gLake=el("g",{},svg),gHex=el("g",{},svg),gMun=el("g",{},svg),gRiv=el("g",{},svg),gL=el("g",{},svg),gP=el("g",{},svg),gT=el("g",{},svg),gSt=el("g",{},svg);
+D.geo.lake.forEach(s=>el("path",{d:path(dec(s))+"Z",fill:"var(--lake)",stroke:"none"},gLake));
+const R=50,S3=Math.sqrt(3);
+const hexEls=D.hexes.map(h=>{const [q,r]=h;const cx=R*S3*(q+r/2),cy=-(R*1.5*r);const pts=[];for(let k=0;k<6;k++){const a=Math.PI/180*(60*k-30);pts.push([cx+R*Math.cos(a),cy+R*Math.sin(a)])}const e=el("path",{d:path(pts)+"Z","stroke-width":1.2,"vector-effect":"non-scaling-stroke"},gHex);e.__h=h;return e});
+for(const nm in D.geo.mun){for(const ring of D.geo.mun[nm].split("|")){el("path",{d:path(dec(ring))+"Z",fill:"none",stroke:"var(--ink)","stroke-width":1.4,"stroke-opacity":nm==="West Milwaukee"?.35:.55,"vector-effect":"non-scaling-stroke","stroke-dasharray":nm==="West Milwaukee"?"3 3":""},gMun)}}
+const lines=(key,g,attrs)=>D.geo[key].split("|").forEach(s=>el("path",Object.assign({d:path(dec(s)),fill:"none","vector-effect":"non-scaling-stroke","stroke-linecap":"round","stroke-linejoin":"round"},attrs),g));
+lines("LINER",gRiv,{stroke:"var(--c3)","stroke-width":2.2});
+lines("LINEL",gL,{stroke:"var(--bike)","stroke-width":1.3,"stroke-opacity":.7,"stroke-dasharray":"4 3"});
+lines("LINEP",gP,{stroke:"var(--bike)","stroke-width":2.4});
+lines("LINET",gT,{stroke:"var(--tram)","stroke-width":3});
+gL.style.display="none";
+const bandLabel=["fewer than 100","100–249","250–499","500–999","1,000–2,499","2,500 or more"];
+const bandR=[2.2,3,3.8,4.8,6,7.6];
+const stEls=D.stations.map(s=>{const c=el("circle",{cx:s[1],cy:-s[2],fill:s[3]?"var(--accent)":"var(--panel)",stroke:s[3]?"var(--panel)":"var(--accent)","stroke-width":1.4,"vector-effect":"non-scaling-stroke"},gSt);c.__s=s;return c});
+function sizeStations(){const k=vb.w/svg.clientWidth||1;stEls.forEach(c=>c.setAttribute("r",bandR[c.__s[4]]*k*1.15))}
+const L={
+ dens:{v:h=>h[3],cuts:[1000,2000,3000,4500,6000],ticks:["<1k","1–2k","2–3k","3–4.5k","4.5–6k","6k+"],unit:"residents per km²",pal:"c"},
+ inc:{v:h=>h[4]<0?null:h[4],cuts:[30,45,60,80,100],ticks:["$100k+","80–100","60–80","45–60","30–45","<$30k"],unit:"median household income (darker = lower)",pal:"c",rev:true},
+ bus:{v:h=>h[5],cuts:[1,4,8,12,16],ticks:["0","1–3","4–7","8–11","12–15","16+"],unit:"bus stops within 400 m",pal:"c"},
+ bike:{v:h=>h[6],cuts:[100,250,500,1000],ticks:[">1 km","0.5–1 km","250–500","100–250","<100 m"],unit:"distance to nearest bike facility (darker = closer)",pal:"c",rev:true,n:5},
+ gap:{v:h=>h[7],cuts:[300,500,800,1500],ticks:["≤300 m","300–500","500–800","0.8–1.5 km",">1.5 km"],unit:"distance to nearest Bublr station",pal:"g",n:5}
+};
+let cur="dens";
+function cls(spec,v){let i=0;while(i<spec.cuts.length&&v>=spec.cuts[i])i++;return i}
+function colorFor(spec,v){if(v==null)return "var(--nodata)";const n=spec.n||6;let i=cls(spec,v);if(spec.rev)i=(n-1)-i;if(spec.pal==="g")return `var(--g${i})`;const idx=n===5?[0,1,2,4,5][i]:i;return `var(--c${idx})`}
+function paint(){const spec=L[cur];hexEls.forEach(e=>{const v=spec.v(e.__h);e.style.fill=colorFor(spec,v);e.style.stroke="var(--panel)";e.setAttribute("stroke-opacity",.6)});legend()}
+function legend(){const spec=L[cur];const n=spec.n||6;let sw="";for(let i=0;i<n;i++){let c;if(spec.pal==="g")c=`var(--g${i})`;else{const idx=n===5?[0,1,2,4,5][i]:i;c=`var(--c${idx})`}sw+=`<i style="background:${c}"></i>`}
+ const ticks=spec.ticks.map(t=>`<span>${t}</span>`).join("");
+ document.getElementById("legend").innerHTML=`<b>${spec.unit}</b><div class="row">${sw}</div><div class="ticks">${ticks}</div><div class="st"><span><svg width="12" height="12" aria-hidden="true"><circle cx="6" cy="6" r="4.5" fill="none" stroke="${css("--accent")}" stroke-width="1.6"/></svg>kiosk station</span><span><svg width="12" height="12" aria-hidden="true"><circle cx="6" cy="6" r="4.5" fill="${css("--accent")}"/></svg>movable dock</span></div>`}
+document.querySelectorAll("#layerSeg button").forEach(b=>b.addEventListener("click",()=>{cur=b.dataset.layer;document.querySelectorAll("#layerSeg button").forEach(x=>x.setAttribute("aria-pressed",x===b));paint()}));
+[["ovSt",gSt],["ovP",gP],["ovL",gL],["ovT",gT],["ovR",gRiv]].forEach(([id,g])=>{const i=document.getElementById(id);g.style.display=i.checked?"":"none";i.addEventListener("change",()=>g.style.display=i.checked?"":"none")});
+const muniN=["Milwaukee","Wauwatosa","West Allis","Shorewood"];
+const tip=document.getElementById("tip"),box=svg.parentElement;
+function showTip(ev,html){tip.innerHTML=html;tip.style.display="block";const r=box.getBoundingClientRect();let x=ev.clientX-r.left+14,y=ev.clientY-r.top+14;if(x+250>r.width)x=ev.clientX-r.left-250;if(y+110>r.height)y=ev.clientY-r.top-110;tip.style.left=x+"px";tip.style.top=y+"px"}
+svg.addEventListener("pointermove",ev=>{if(dragging)return;const t=ev.target;if(t.__s){const s=t.__s;showTip(ev,`<b>${s[0]}</b><br>${s[6]} · ${s[3]?"new movable dock":"kiosk station"}<br>Nearest bus stop: ${fmt(s[5])} m`)}else if(t.__h){const h=t.__h;showTip(ev,`<b>${muniN[h[2]]}</b><br>${fmt(h[3])} residents/km²<br>Median household income: ${h[4]<0?"no data":"$"+h[4]+"k"}<br>Bus stops within 400 m: ${h[5]}<br>Nearest bike facility: ${h[6]>=3000?"3 km+":fmt(h[6])+" m"}<br>Nearest Bublr station: ${fmt(h[7])} m`)}else tip.style.display="none"});
+svg.addEventListener("pointerleave",()=>tip.style.display="none");
+let dragging=false,last=null;
+svg.addEventListener("pointerdown",ev=>{dragging=true;last=[ev.clientX,ev.clientY];svg.setPointerCapture(ev.pointerId);tip.style.display="none"});
+svg.addEventListener("pointermove",ev=>{if(!dragging)return;const k=vb.w/svg.clientWidth;vb.x-=(ev.clientX-last[0])*k;vb.y-=(ev.clientY-last[1])*k;last=[ev.clientX,ev.clientY];setVB()});
+svg.addEventListener("pointerup",()=>dragging=false);svg.addEventListener("pointercancel",()=>dragging=false);
+function zoom(f,cx,cy){const ar=svg.clientHeight/svg.clientWidth;cx=cx??vb.x+vb.w/2;cy=cy??vb.y+vb.h/2;const nw=Math.min(Math.max(vb.w*f,200),3200);const nh=nw*ar;vb.x=cx-(cx-vb.x)*nw/vb.w;vb.y=cy-(cy-vb.y)*nh/vb.h;vb.w=nw;vb.h=nh;setVB()}
+svg.addEventListener("wheel",ev=>{ev.preventDefault();const r=svg.getBoundingClientRect();const cx=vb.x+(ev.clientX-r.left)/r.width*vb.w,cy=vb.y+(ev.clientY-r.top)/r.height*vb.h;zoom(ev.deltaY>0?1.2:1/1.2,cx,cy)},{passive:false});
+document.getElementById("zin").onclick=()=>zoom(1/1.4);document.getElementById("zout").onclick=()=>zoom(1.4);
+function fit(){const ar=svg.clientHeight/svg.clientWidth;const cx=start.x+start.w/2,cy=start.y+start.h/2;let w=start.w,h=w*ar;if(h<start.h){h=start.h;w=h/ar}vb={x:cx-w/2,y:cy-h/2,w,h};setVB()}
+document.getElementById("zreset").onclick=fit;
+window.addEventListener("resize",fit);
+paint();fit();
+
+/* ---------- CHARTS ---------- */
+function bars(id,data,o={}){const W=360,H=o.h||220,m={l:34,r:8,t:18,b:o.sub?40:26};const host=document.getElementById(id);const s=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img","aria-label":o.label||""},host);
+ const max=o.max||Math.max(...data.map(d=>d.v));const iw=W-m.l-m.r,ih=H-m.t-m.b;const bw=iw/data.length;
+ const ticks=o.ticks||[0,max/2,max];ticks.forEach(t=>{const y=m.t+ih-(t/max)*ih;el("line",{x1:m.l,x2:W-m.r,y1:y,y2:y,class:"grid"},s);const tx=el("text",{x:m.l-6,y:y+4,"text-anchor":"end"},s);tx.textContent=o.tf?o.tf(t):fmt(Math.round(t))});
+ data.forEach((d,i)=>{const h=(d.v/max)*ih,x=m.l+i*bw+bw*.18,w=bw*.64,y=m.t+ih-h;el("rect",{x,y,width:w,height:h,rx:2,fill:d.c||"var(--accent)"},s);const v=el("text",{x:x+w/2,y:y-5,"text-anchor":"middle",class:"val"},s);v.textContent=o.vf?o.vf(d.v):fmt(d.v);const l=el("text",{x:x+w/2,y:H-m.b+16,"text-anchor":"middle"},s);l.textContent=d.k;if(d.sub){const l2=el("text",{x:x+w/2,y:H-m.b+31,"text-anchor":"middle"},s);l2.textContent=d.sub}});}
+bars("chB",[{k:"≤30 m",v:31.2},{k:"≤50",v:42.2},{k:"≤100",v:59.5},{k:"≤150",v:73.4},{k:"≤200",v:86.1},{k:"≤400",v:94.2}].map(d=>({...d,c:"var(--bus)"})),{max:100,ticks:[0,50,100],tf:t=>t+"%",vf:v=>Math.round(v)+"%",label:"Share of stations within distance of a bus stop"});
+(function(){const id="chQ",W=360,H=240,m={l:34,r:8,t:18,b:42};const host=document.getElementById(id);const s=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img","aria-label":"Coverage by income fifth"},host);
+ const d=[["Lowest","$12–37k",18.4,28.7],["2nd","$37–50k",17.3,26.7],["Middle","$50–62k",11.7,19.9],["4th","$62–77k",15.7,19.9],["Highest","$77–150k",20.1,37.9]];const max=40,iw=W-m.l-m.r,ih=H-m.t-m.b,bw=iw/d.length;
+ [0,20,40].forEach(t=>{const y=m.t+ih-t/max*ih;el("line",{x1:m.l,x2:W-m.r,y1:y,y2:y,class:"grid"},s);el("text",{x:m.l-6,y:y+4,"text-anchor":"end"},s).textContent=t+"%"});
+ d.forEach((r,i)=>{const x=m.l+i*bw+bw*.14,w=bw*.34;[[r[2],"var(--c2)",0],[r[3],"var(--accent)",1]].forEach(([v,c,j])=>{const h=v/max*ih;el("rect",{x:x+j*w,y:m.t+ih-h,width:w-2,height:h,rx:2,fill:c},s);el("text",{x:x+j*w+(w-2)/2,y:m.t+ih-h-5,"text-anchor":"middle",class:"val"},s).textContent=Math.round(v)});
+ el("text",{x:x+w,y:H-m.b+16,"text-anchor":"middle"},s).textContent=r[0];el("text",{x:x+w,y:H-m.b+31,"text-anchor":"middle"},s).textContent=r[1]});})();
+
+/* ---------- AHP TABLES ---------- */
+const W=[["Population density","Coverage",22.2],["Access to services by bike and bus","Equity",22.2],["Proximity to municipal bus service","Integration",22.2],["Proximity to underserved job hubs","Coverage",11.1],["Low income (territorial monetary disadvantage)","Equity",11.1],["Proximity to cycling infrastructure","Integration",11.1]];
+document.getElementById("wtbl").innerHTML=W.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td class="num"><span class="wbar" style="width:${r[2]*3}px"></span>${r[2].toFixed(1)}%</td></tr>`).join("");
+const PJ=[["Density vs Job hubs","Density, 2"],["Density vs Low income","Density, 2"],["Density vs Access to services","Equal"],["Density vs Bus","Equal"],["Density vs Cycling infrastructure","Density, 2"],["Job hubs vs Low income","Equal"],["Job hubs vs Access to services","Access, 2"],["Job hubs vs Bus","Bus, 2"],["Job hubs vs Cycling infrastructure","Equal"],["Low income vs Access to services","Access, 2"],["Low income vs Bus","Bus, 2"],["Low income vs Cycling infrastructure","Equal"],["Access to services vs Bus","Equal"],["Access to services vs Cycling infrastructure","Access, 2"],["Bus vs Cycling infrastructure","Bus, 2"]];
+document.getElementById("ptbl").innerHTML=PJ.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join("");
+</script>
+</body>
+</html>

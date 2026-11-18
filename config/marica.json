@@ -1,0 +1,49 @@
+{
+  "name": "Maricá, Rio de Janeiro, Brazil",
+  "bbox": [-23.0243, -43.0246, -22.8408, -42.6342],
+  "boundary_url": "https://servicodados.ibge.gov.br/api/v3/malhas/municipios/3302700?formato=application/vnd.geo%2Bjson&qualidade=maxima",
+  "gbfs_station_information": null,
+  "hex_radius_m": 250,
+  "elevation": true,
+  "population": {
+    "source": "IBGE Census 2022, table 9923, population by district",
+    "default_zone": "Maricá (Sede)",
+    "zones": [
+      {"name": "Maricá (Sede)", "population": 79176, "places": ["Araçatiba", "Barra de Maricá", "Camburi", "Caxito", "Centro", "Condado de Maricá", "Flamengo", "Itapeba", "Jacaroá", "Lagarto", "Marquês de Maricá", "Mumbuca", "Parque Nanci", "Pilar", "Pindobas", "Ponta Grossa", "Restinga de Maricá", "Retiro", "São José do Imbassaí", "Silvado", "Ubatiba", "Zacarias", "Divineia", "Maricá"]},
+      {"name": "Ponta Negra", "population": 22922, "places": ["Balneário Bambuí", "Bananal", "Caju", "Cordeirinho", "Espraiado", "Guaratiba", "Jaconé", "Jardim Interlagos", "Manoel Ribeiro", "Pindobal", "Ponta Negra", "Vale da Figueira"]},
+      {"name": "Inoã", "population": 35709, "places": ["Calaboca", "Cassorotiba", "Chácaras de Inoã", "Inoã", "Santa Paula", "SPAR"]},
+      {"name": "Itaipuaçu", "population": 59470, "places": ["Barroco", "Cajueiros", "Itaocaia Valley", "Jardim Atlântico Central", "Jardim Atlântico Leste", "Jardim Atlântico Oeste", "Morada das Águias", "Praia de Itaipuaçu", "Recanto de Itaipuaçu", "Rincão Mimoso", "Itaipuaçu", "Itaipuaçú"]}
+    ]
+  },
+  "pairwise": {
+    "note": "Saaty 1-9 scale. [A, B, 2] means A is moderately more important than B. 'gap' stands in for the income criterion until an income layer is added.",
+    "criteria": ["density", "jobs", "gap", "services", "bus", "cycling"],
+    "judgments": [
+      ["density", "jobs", 2], ["density", "gap", 2], ["density", "services", 1], ["density", "bus", 1], ["density", "cycling", 2],
+      ["jobs", "gap", 1], ["services", "jobs", 2], ["bus", "jobs", 2], ["jobs", "cycling", 1],
+      ["services", "gap", 2], ["bus", "gap", 2], ["gap", "cycling", 1],
+      ["services", "bus", 1], ["services", "cycling", 2], ["bus", "cycling", 2]
+    ]
+  },
+  "weights": {"density": 0.222, "services": 0.222, "bus": 0.222, "jobs": 0.111, "gap": 0.111, "cycling": 0.111},
+  "rules": {
+    "spacing_m": 450,
+    "min_from_existing_m": 350,
+    "min_pop600": 1000,
+    "gap_min_m": 350,
+    "gap_full_m": 1500
+  },
+  "phases": [
+    {"name": "1", "n": 12, "contig_m": 1500, "quota": {"Itaipuaçu": 4, "Maricá (Sede)": 4, "Inoã": 4, "Ponta Negra": 0}},
+    {"name": "2", "n": 20, "contig_m": 1500, "contig_by_zone": {"Ponta Negra": 6000}, "quota": {"Itaipuaçu": 7, "Maricá (Sede)": 5, "Inoã": 4, "Ponta Negra": 4}},
+    {"name": "3", "n": 20, "contig_m": 2000, "contig_by_zone": {"Ponta Negra": 6000}, "quota": {"Itaipuaçu": 7, "Maricá (Sede)": 5, "Inoã": 4, "Ponta Negra": 4}}
+  ],
+  "scenarios": {
+    "A_densify": {"description": "Highest density and services; within 1.2 km of the network; 400 m spacing", "n": 20, "spacing_m": 400, "contig_m": 1200,
+                  "weights": {"density": 0.35, "services": 0.25, "bus": 0.15, "jobs": 0.15, "cycling": 0.10}},
+    "B_transit_first": {"description": "Bus stops weigh most; every site at a stop or main road", "n": 20, "require_transit": true,
+                        "weights": {"bus": 0.45, "density": 0.20, "services": 0.15, "jobs": 0.10, "cycling": 0.10}},
+    "C_coverage_first": {"description": "Distance from today's stations weighs most; sites must pair within 1.2 km", "n": 20, "n_candidates": 30, "cluster_m": 1200,
+                         "weights": {"gap": 0.35, "density": 0.25, "services": 0.25, "bus": 0.15}}
+  }
+}
